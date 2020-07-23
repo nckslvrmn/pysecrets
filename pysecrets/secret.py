@@ -72,7 +72,7 @@ class Secret:
             dynamo.update_item(
                 TableName = 'Secrets',
                 Key = { 'secret_id': { 'S': self.secret_id } },
-                AttributeUpdates = { 'view_count': { 'N': str(self.view_count) } }
+                AttributeUpdates = { 'view_count': { 'Value': { 'N': str(self.view_count) }, 'Action': 'PUT' } }
             )
         else:
             dynamo.delete_item(
