@@ -18,5 +18,5 @@ def handler(event, context):
 
     resp = router(env)
     resp['isBase64Encoded'] = False
-    resp['headers'] = { 'Content-Type': 'application/json' } if resp['headers'] == None else resp['headers']
+    resp['headers'] = resp.get('headers', { 'Content-Type': 'application/json' })
     return resp

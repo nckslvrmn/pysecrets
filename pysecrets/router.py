@@ -18,7 +18,14 @@ def encrypt(env):
     }
 
 def decrypt(env):
-    return
+    sec = Secret.load(env['body']['secret_id'])
+    if sec == None:
+        return { 'statusCode': 404, 'body': '' }
+    decrypted = sec.decrypt(env['body']['passphrase'])
+    return {
+        'statusCode': 200,
+        'body': json.dumps({ 'data': decrypted })
+    }
 
 def router(env):
     if env['path'] == '/encrypt':

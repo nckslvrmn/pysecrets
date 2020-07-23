@@ -14,18 +14,6 @@ class SimpleCrypt:
         self.tag = None if tag == None else tag
         self.header = get_random_bytes(16) if header == None else header
 
-    @classmethod
-    def from_json(self, secret_json):
-        data = json.loads(secret_json)
-        return SimpleCrypt(
-            secret_id=data['secret_id'],
-            data=b64d(data['data']),
-            nonce=b64d(data['nonce']),
-            salt=b64d(data['salt']),
-            tag=b64d(data['tag']),
-            header=b64d(data['header'])
-        )
-
     def encrypt(self, input_data):
         cipher = self.__init_cipher()
         self.data, self.tag = cipher.encrypt_and_digest(input_data.encode('utf-8'))
