@@ -74,7 +74,7 @@
         checkForm: function (e) {
           axios({
             method: 'POST',
-            url: 'https://api.rueaccess.org/encrypt',
+            url: 'https://secret.slvr.io/encrypt',
             data: this.$refs.file.files[0],
             params: {
               file_name: this.$refs.file.files[0].name
