@@ -90,7 +90,7 @@
       methods: {
         checkForm: function (e) {
           axios
-            .post('https://secret.slvr.io/encrypt', {secret: this.secret, view_count: this.view_count})
+            .post('https://api.rueaccess.org/encrypt', {secret: this.secret, view_count: this.view_count})
             .then((response) => {
               this.isError = false;
               this.secret_link = `${window.location.origin}/secret/${response.data.secret_id}`;

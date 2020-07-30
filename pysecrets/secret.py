@@ -45,7 +45,7 @@ class Secret:
             })}
             self.__store_file()
         else:
-            item['data'] = {'S': b64s(self.crypt.data)},
+            item['data'] = {'S': b64s(self.crypt.data)}
         dynamo.put_item(TableName='Secrets', Item=item)
 
     @classmethod
@@ -60,7 +60,7 @@ class Secret:
             return None
         if resp.get('Item') is None:
             return None
-        if resp['Item'].get('file_name', None).get('S', None) is not None:
+        if resp['Item'].get('file_name', None) is not None:
             s3 = boto3.client('s3', region_name='us-east-1')
             try:
                 s3_resp = s3.get_object(Bucket=os.environ.get('S3_BUCKET'), Key=secret_id + '.enc')

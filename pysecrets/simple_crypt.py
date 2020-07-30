@@ -16,8 +16,8 @@ class SimpleCrypt:
 
     def encrypt(self, input_data):
         cipher = self.__init_cipher()
-        input_data = input_data.encode('utf-8') if type(input_data) == 'str' else input_data
-        self.data, self.tag = cipher.encrypt_and_digest(input_data)
+        to_enc = input_data.encode('utf-8') if isinstance(input_data, str) else input_data
+        self.data, self.tag = cipher.encrypt_and_digest(to_enc)
 
     def decrypt(self):
         cipher = self.__init_cipher()

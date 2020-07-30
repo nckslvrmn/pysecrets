@@ -13,7 +13,7 @@ def handler(event, context):
     env = {
         'method': event['requestContext']['httpMethod'],
         'path': event['requestContext']['path'],
-        'params': event['queryStringParameters'] if event['queryStringParameters'] is not None else '',
+        'params': event['queryStringParameters'] if event['queryStringParameters'] is not None else {},
         'body': body
     }
 

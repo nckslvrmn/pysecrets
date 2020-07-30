@@ -4,7 +4,7 @@ from .helpers import sanitize_view_count, b64s
 
 
 def encrypt(env):
-    if env['params']['file_name']:
+    if env.get('params', None).get('file_name', None) is not None:
         sec = Secret(
             data=env['body'],
             file_name=env['params']['file_name']
