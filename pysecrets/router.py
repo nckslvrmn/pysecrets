@@ -1,31 +1,42 @@
 import json
-import boto3
-import base64
 from .secret import Secret
-from .helpers import sanitize_view_count
+from .helpers import sanitize_view_count, b64s
+
 
 def encrypt(env):
-    sec = Secret(env['body']['secret'], sanitize_view_count(env['body']['view_count']))
+    if env['params']['file_name']:
+        sec = Secret(
+            data=env['body'],
+            file_name=env['params']['file_name']
+        )
+    else:
+        sec = Secret(data=env['body']['secret'], view_count=sanitize_view_count(env['body']['view_count']))
     secret_id, password = sec.encrypt()
     sec.store()
     return {
         'statusCode': 200,
-        'headers': { 'Content-Type': 'application/json' },
+        'headers': {'Content-Type': 'application/json'},
         'body': json.dumps({
             'secret_id': secret_id,
             'passphrase': password
         })
     }
 
+
 def decrypt(env):
     sec = Secret.load(env['body']['secret_id'])
-    if sec == None:
-        return { 'statusCode': 404, 'body': '' }
+    if sec is None:
+        return {'statusCode': 404, 'body': ''}
     decrypted = sec.decrypt(env['body']['passphrase'])
+    if sec.file_name is not None:
+        body = {'data': b64s(decrypted.encode('utf-8')), 'file_name': sec.file_name}
+    else:
+        body = {'data': decrypted}
     return {
         'statusCode': 200,
-        'body': json.dumps({ 'data': decrypted })
+        'body': json.dumps(body)
     }
+
 
 def router(env):
     if env['path'] == '/encrypt':
