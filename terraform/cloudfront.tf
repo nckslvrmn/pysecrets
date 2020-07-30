@@ -8,7 +8,7 @@ resource "aws_cloudfront_distribution" "secrets" {
     origin_id   = aws_cloudfront_origin_access_identity.oai.id
 
     s3_origin_config {
-      origin_access_identity = "TBD"
+      origin_access_identity = aws_cloudfront_origin_access_identity.oai.cloudfront_access_identity_path
     }
   }
 
@@ -17,7 +17,7 @@ resource "aws_cloudfront_distribution" "secrets" {
   comment             = "Secrets Site"
   default_root_object = "index.html"
 
-  aliases = ["secrets.slvr.io"]
+  aliases = [var.main_domain_name]
 
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD"]
@@ -69,6 +69,12 @@ resource "aws_cloudfront_distribution" "secrets" {
   viewer_certificate {
     minimum_protocol_version = "TLSv1.2_2018"
     ssl_support_method       = "sni-only"
-    acm_certificate_arn      = aws_acm_certificate.example.arn
+    acm_certificate_arn      = var.acm_arn
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
   }
 }

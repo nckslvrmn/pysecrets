@@ -1,6 +1,15 @@
 resource "aws_s3_bucket" "secrets_files" {
-  bucket = "secrets-files"
+  bucket = "${var.prefix}-secrets-file-store"
   acl    = "private"
+
+  lifecycle_rule {
+    id      = "clean"
+    enabled = true
+
+    expiration {
+      days = tonumber(var.ttl_days) + 1
+    }
+  }
 }
 
 resource "aws_s3_bucket_public_access_block" "block_all" {
@@ -13,7 +22,7 @@ resource "aws_s3_bucket_public_access_block" "block_all" {
 }
 
 resource "aws_s3_bucket" "secrets_site" {
-  bucket = "secrets.slve.io"
+  bucket = var.main_domain_name
   acl    = "private"
 }
 
