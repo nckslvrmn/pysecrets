@@ -1,7 +1,7 @@
 pysecrets
 ===
 
-A light-weight, ephemeral secret sharing service. Secrets uses the latest AES and KDF encryption standards to ensure the confidentiality, integrity, and authenticity of data sent through the service (via the [simple_crypt](https://github.com/nckslvrmn/simple_crypt) gem).
+A light-weight, ephemeral secret sharing service. Secrets uses the latest AES and KDF encryption standards to ensure the confidentiality, integrity, and authenticity of data sent through the service.
 
 ## Getting Started
 
