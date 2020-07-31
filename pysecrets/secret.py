@@ -23,7 +23,8 @@ class Secret:
         self.crypt.password = password
         decrypted = self.crypt.decrypt()
         self.__burn()
-        return decrypted.decode('utf-8')
+        ret = decrypted if self.file_name else decrypted.decode('utf-8')
+        return ret
 
     def store(self):
         ttl = int(time.time() + (86400 * int(os.environ.get('TTL_DAYS', 5))))

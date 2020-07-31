@@ -29,7 +29,7 @@ def decrypt(env):
         return {'statusCode': 404, 'body': ''}
     decrypted = sec.decrypt(env['body']['passphrase'])
     if sec.file_name is not None:
-        body = {'data': b64s(decrypted.encode('utf-8')), 'file_name': sec.file_name}
+        body = {'data': b64s(decrypted), 'file_name': sec.file_name}
     else:
         body = {'data': decrypted}
     return {
