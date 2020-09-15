@@ -1,7 +1,7 @@
 pysecrets
 ===
 
-A light-weight, ephemeral secret sharing service. Secrets uses the latest AES and KDF encryption standards to ensure the confidentiality, integrity, and authenticity of data sent through the service.
+A light-weight, ephemeral secret sharing service. Secrets uses a secure PBKDF and the latest AES encryption standards to ensure the confidentiality, integrity, and authenticity of data sent through the service.
 
 ## Getting Started
 
