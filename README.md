@@ -1,7 +1,7 @@
 pysecrets
 ===
 
-A light-weight, ephemeral secret sharing service. Secrets uses the latest AES and KDF encryption standards to ensure the confidentiality, integrity, and authenticity of data sent through the service.
+A light-weight, ephemeral secret sharing service. Secrets uses a secure PBKDF and the latest AES encryption standards to ensure the confidentiality, integrity, and authenticity of data sent through the service.
 
 ## Getting Started
 
@@ -75,7 +75,7 @@ Scrpyt is a password-based key derivation function and us used to generate the A
 
 ### Random Strings
 
-Pycryptodomes Random module is used to generate both random IDs for the secrets to be stored as well as random passwords. It supports random number generation the `/dev/urandom` entropy pool device. More on that can be found [here](https://pycryptodome.readthedocs.io/en/latest/src/random/random.html)
+Pycryptodomes Random module is used to generate both random IDs for the secrets to be stored as well as random passwords. It supports random number generation from the `/dev/urandom` entropy pool device. More on that can be found [here](https://pycryptodome.readthedocs.io/en/latest/src/random/random.html)
 
 ## Licensing
 
