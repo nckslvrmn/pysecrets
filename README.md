@@ -30,6 +30,33 @@ VARIABLE     | DEFAULT | DESCRIPTION
 TTL_DAYS     | 5       | Configures the TTL that the secret records will have in Dynamo.
 S3_BUCKET    | nil     | Tells the server in which S3 bucket to store encrypted files.
 
+## API Usage
+
+Because pysecrets uses the SPA + API architecture, the APIs can be accessed directly. To interact with the APIs, here are some examples via CURL. To send and receive a string based secret:
+```
+~ ❯ curl -X POST https://API_URL/encrypt -d '{"secret": "super secret text", "view_count": 1}'
+{"secret_id": "HrVfOn1aoqKHeRKi", "passphrase": "iT95_B9p9PSMcP-hH9OGS81w9FZVTEpf"}
+
+~ ❯ curl -X POST https://API_URL/decrypt -d '{"secret_id": "HrVfOn1aoqKHeRKi", "passphrase": "iT95_B9p9PSMcP-hH9OGS81w9FZVTEpf"}'
+{"data": "super secret text"}
+```
+The string based secret sharing works by passing the `encrypt` route secret text and a view count via a JSON payload. To retreive the secret, send the `decrypt` route the generated secret id and passphrase.
+
+The file based API works similarly:
+```
+~ ❯ cat test.txt
+hello
+
+~ ❯ curl -X POST "https://api.rueaccess.org/encrypt?file_name=test.txt" -d '@test.txt'
+{"secret_id": "97tfNQQBAl0w2zNE", "passphrase": "CPIX4PeLALaLaNLVFM~oNjM!N&bjZ377"}
+
+~ ❯ curl -X POST https://api.rueaccess.org/decrypt -d '{"secret_id": "97tfNQQBAl0w2zNE", "passphrase": "CPIX4PeLALaLaNLVFM~oNjM!N&bjZ377"}'
+{"data": "aGVsbG8=", "file_name": "test.txt"}
+
+~ ❯ echo "aGVsbG8=" | base64 -d
+hello
+```
+The same `encrypt` route is used but this time, the data payload is the file to encrypt. Additionally, a `file_name` url parameter is specified that determines the file name that the receiver will use to write the received file. To retrieve this file, hit the same `decrypt` route with the same payload as the string secret. This will return a JSON object containing the output file name an a base64 encoded string of the files original contents. Decode the data string and write it to a file for storage. The UI will handle all of that should that be used.
 
 ## Security Features
 
