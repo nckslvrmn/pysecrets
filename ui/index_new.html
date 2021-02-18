@@ -85,7 +85,7 @@
       .then((resp) => resp.json())
       .then(function(data) {
         var secret_link = `${window.location.origin}/secret/${data.secret_id}`;
-        var respHTML = `<br /><pre id="response" class="mw-50"><a v-bind:href="secret_link" target="_blank">${secret_link}</a><br />passphrase: ${data.passphrase}</pre>`;
+        var respHTML = `<br /><pre id="response" class="mw-50"><a href="${secret_link}" target="_blank">${secret_link}</a><br />passphrase: ${data.passphrase}</pre>`;
         document.getElementById("results").innerHTML = respHTML;
       })
       .catch((error) => {
