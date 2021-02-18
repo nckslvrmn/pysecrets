@@ -72,6 +72,7 @@
 
   <script>
     function postSecret() {
+      event.preventDefault();
       var form = new FormData(document.getElementById("form"));
       var secret = form.get("secret");
       var view_count = form.get("view_count");
@@ -92,7 +93,6 @@
         var respHTML = `<br /><div class="alert alert-danger" role="alert">There was an error storing secret</div>`;
         document.getElementById("results").innerHTML = respHTML;
       });
-      event.preventDefault();
     }
   </script>
 </body>

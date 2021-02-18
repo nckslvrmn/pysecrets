@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>Secrets</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.min.js" integrity="sha256-ngFW3UnAN0Tnm76mDuu7uUtYEcG3G5H1+zioJw3t+68=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js" integrity="sha256-T/f7Sju1ZfNNfBh7skWn0idlCBcI3RwdLSS4/I7NQKQ=" crossorigin="anonymous"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha256-L/W5Wfqfa0sdBNIKN9cG6QA5F2qx4qICmU2VgLruv9Y=" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css" integrity="sha512-P5MgMn1jBN01asBgU0z60Qk4QxiXo86+wlFahKrsQf37c9cro517WzVSPPV1tDKzhku2iJ2FVgL67wG03SGnNA=="
+    crossorigin="anonymous" />
   <style>
-    html, body {
+    html,
+    body {
       height: 100%;
       background: #bbb;
     }
@@ -24,82 +25,64 @@
       justify-content: center;
     }
 
-    .fade-enter-active, .fade-leave-active {
+    .fade-enter-active,
+    .fade-leave-active {
       transition: opacity .25s;
     }
 
-    .fade-enter, .fade-leave-to {
+    .fade-enter,
+    .fade-leave-to {
       opacity: 0;
     }
   </style>
 </head>
+
 <body class="text-left">
-  <div id="app" class="card card-signin">
+  <div class="card card-signin">
     <h1 class="display-4 text-truncate">Ephemeral Secrets</h1>
     <h6 class="text-truncate">&nbsp;Enter a password, secret message, or private link below.</h6>
     <h6 class="text-truncate">&nbsp;A secret link only works for the number of times specified and then disappears forever.</h6>
     <br />
-    <form @submit="checkForm" class="form-signin">
+    <form onsubmit="postFile()" id="form" class="form-signin">
       <div class="form-group">
-        <input type="file" id="file" ref="file" name="file" v-on:change="loadFile()"/>
+        <input type="file" id="file" ref="file" name="file"/>
       </div>
       <br />
       <div class="form-group">
         <input type="submit" class="btn btn-primary btn-lg btn-block" value="Create Secret Link">
       </div>
     </form>
-    <transition name="fade">
-      <section v-if="isError">
-        <br />
-        <div class="alert alert-danger" role="alert">There was an error storing secret</div>
-      </section>
-    </transition>
-    <transition name="fade">
-      <section v-if="secret_link">
-        <br />
-        <pre id="response" class="mw-50"><a v-bind:href="secret_link" target="_blank">{{ secret_link }}</a><br />passphrase: {{ passphrase }}</pre>
-      </section>
-    </transition>
+    <div id="results"></div>
   </div>
 
   <script>
-    var app = new Vue({
-      el: '#app',
-      data: {
-        secret_link: null,
-        passphrase: null,
-        isError: false,
-      },
-      methods: {
-        checkForm: function (e) {
-          axios({
-            method: 'POST',
-            url: 'https://secret.slvr.io/encrypt',
-            data: this.$refs.file.files[0],
-            params: {
-              file_name: this.$refs.file.files[0].name
-            }
-          })
-          .then((response) => {
-            this.isError = false;
-            this.secret_link = `${window.location.origin}/secret/${response.data.secret_id}`;
-            this.passphrase = response.data.passphrase;
-          })
-          .catch(error => {
-            this.isError = true;
-            console.log(error);
-          })
-          e.preventDefault();
-        },
-        loadFile: function () {
-          var FileSize = this.$refs.file.files[0].size / 1024 / 1024;
-          if (FileSize > 10) {
-            alert('File size exceeds 10 MB');
-            this.$refs.file.value = '';
-          }
-        }
+    function postFile() {
+      event.preventDefault();
+      var file = document.getElementById("file");
+      var fileSize = file.files[0].size / 1024 / 1024;
+      if (fileSize > 10) {
+        alert('File size exceeds 10 MB');
+        file.value = '';
       }
-    })
+      var url = new URL('https://secret.slvr.io/encrypt');
+      var params = { file_name: file.files[0].name };
+      url.search = new URLSearchParams(params).toString();
+      fetch(url, {
+          method: 'post',
+          body: file.files[0]
+        })
+        .then((resp) => resp.json())
+        .then(function(data) {
+          var secret_link = `${window.location.origin}/secret/${data.secret_id}`;
+          var respHTML = `<br /><pre id="response" class="mw-50"><a href="${secret_link}" target="_blank">${secret_link}</a><br />passphrase: ${data.passphrase}</pre>`;
+          document.getElementById("results").innerHTML = respHTML;
+        })
+        .catch((error) => {
+          var respHTML = `<br /><div class="alert alert-danger" role="alert">There was an error storing the secret file</div>`;
+          document.getElementById("results").innerHTML = respHTML;
+        });
+    }
   </script>
 </body>
+
 </html>
