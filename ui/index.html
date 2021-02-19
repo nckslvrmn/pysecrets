@@ -12,6 +12,12 @@
       background: #bbb;
     }
 
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     .card-signin {
       border: 0;
       border-radius: 1rem;
@@ -19,20 +25,13 @@
       padding: 2rem;
     }
 
-    body {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .fade-enter-active,
-    .fade-leave-active {
-      transition: opacity .25s;
-    }
-
-    .fade-enter,
-    .fade-leave-to {
+    #results {
       opacity: 0;
+      transition: opacity .5s;
+    }
+
+    #results.active {
+      opacity: 1;
     }
   </style>
 </head>
@@ -74,8 +73,10 @@
     function postSecret() {
       event.preventDefault();
       var form = new FormData(document.getElementById("form"));
+      var results = document.getElementById("results");
       var secret = form.get("secret");
       var view_count = form.get("view_count");
+      results.classList.remove('active');
       fetch('https://secret.slvr.io/encrypt', {
         method: 'post',
         body: JSON.stringify({
@@ -87,11 +88,14 @@
       .then(function(data) {
         var secret_link = `${window.location.origin}/secret/${data.secret_id}`;
         var respHTML = `<br /><pre id="response" class="mw-50"><a href="${secret_link}" target="_blank">${secret_link}</a><br />passphrase: ${data.passphrase}</pre>`;
-        document.getElementById("results").innerHTML = respHTML;
+        results.innerHTML = respHTML;
+        results.classList.add('active');
       })
       .catch((error) => {
+        var elem = document.getElementById("results");
         var respHTML = `<br /><div class="alert alert-danger" role="alert">There was an error storing secret</div>`;
-        document.getElementById("results").innerHTML = respHTML;
+        results.innerHTML = respHTML;
+        results.classList.add('active');
       });
     }
   </script>
