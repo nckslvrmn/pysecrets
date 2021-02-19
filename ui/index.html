@@ -89,13 +89,12 @@
           var secret_link = `${window.location.origin}/secret/${data.secret_id}`;
           var respHTML = `<br /><pre id="response" class="mw-50"><a href="${secret_link}" target="_blank">${secret_link}</a><br />passphrase: ${data.passphrase}</pre>`;
           results.innerHTML = respHTML;
-          results.classList.add('active');
         })
         .catch((error) => {
           var respHTML = `<br /><div class="alert alert-danger" role="alert">There was an error storing secret</div>`;
           results.innerHTML = respHTML;
-          results.classList.add('active');
         });
+      results.classList.add('active');
     }
   </script>
 </body>
