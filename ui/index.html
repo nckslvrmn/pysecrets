@@ -92,7 +92,6 @@
         results.classList.add('active');
       })
       .catch((error) => {
-        var elem = document.getElementById("results");
         var respHTML = `<br /><div class="alert alert-danger" role="alert">There was an error storing secret</div>`;
         results.innerHTML = respHTML;
         results.classList.add('active');
