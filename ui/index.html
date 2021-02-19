@@ -1,14 +1,21 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>Secrets</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.min.js" integrity="sha256-ngFW3UnAN0Tnm76mDuu7uUtYEcG3G5H1+zioJw3t+68=" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js" integrity="sha256-T/f7Sju1ZfNNfBh7skWn0idlCBcI3RwdLSS4/I7NQKQ=" crossorigin="anonymous"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha256-L/W5Wfqfa0sdBNIKN9cG6QA5F2qx4qICmU2VgLruv9Y=" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css" integrity="sha512-P5MgMn1jBN01asBgU0z60Qk4QxiXo86+wlFahKrsQf37c9cro517WzVSPPV1tDKzhku2iJ2FVgL67wG03SGnNA=="
+    crossorigin="anonymous" />
   <style>
-    html, body {
+    html,
+    body {
       height: 100%;
       background: #bbb;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .card-signin {
@@ -18,34 +25,30 @@
       padding: 2rem;
     }
 
-    body {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .fade-enter-active, .fade-leave-active {
-      transition: opacity .25s;
-    }
-
-    .fade-enter, .fade-leave-to {
+    #results {
       opacity: 0;
+      transition: opacity .5s;
+    }
+
+    #results.active {
+      opacity: 1;
     }
   </style>
 </head>
+
 <body class="text-left">
-  <div id="app" class="card card-signin">
+  <div class="card card-signin">
     <h1 class="display-4 text-truncate">Ephemeral Secrets</h1>
     <h6 class="text-truncate">&nbsp;Enter a password, secret message, or private link below.</h6>
     <h6 class="text-truncate">&nbsp;A secret link only works for the number of times specified and then disappears forever.</h6>
     <br />
-    <form @submit="checkForm" class="form-signin">
+    <form onsubmit="postSecret()" id="form" class="form-signin">
       <div class="form-group">
-        <textarea type="text" class="form-control" autocomplete="off" placeholder="content to be encrypted" v-model="secret" rows="6"></textarea>
+        <textarea type="text" name="secret" class="form-control" autocomplete="off" placeholder="content to be encrypted" rows="6"></textarea>
       </div>
       <div class="form-group form-inline">
         <label for="ViewCount">View Count:&nbsp;&nbsp;&nbsp;</label>
-        <select name="view_count" class="form-control" id="ViewCount" v-model="view_count">
+        <select name="view_count" class="form-control" id="ViewCount">
           <option selected>1</option>
           <option>2</option>
           <option>3</option>
@@ -63,47 +66,37 @@
         <input type="submit" class="btn btn-primary btn-lg btn-block" value="Create Secret Link">
       </div>
     </form>
-    <transition name="fade">
-      <section v-if="isError">
-        <br />
-        <div class="alert alert-danger" role="alert">There was an error storing secret</div>
-      </section>
-    </transition>
-    <transition name="fade">
-      <section v-if="secret_link">
-        <br />
-        <pre id="response" class="mw-50"><a v-bind:href="secret_link" target="_blank">{{ secret_link }}</a><br />passphrase: {{ passphrase }}</pre>
-      </section>
-    </transition>
+    <div id="results"></div>
   </div>
 
   <script>
-    var app = new Vue({
-      el: '#app',
-      data: {
-        secret: null,
-        view_count: 1,
-        secret_link: null,
-        passphrase: null,
-        isError: false,
-      },
-      methods: {
-        checkForm: function (e) {
-          axios
-            .post('https://secret.slvr.io/encrypt', {secret: this.secret, view_count: this.view_count})
-            .then((response) => {
-              this.isError = false;
-              this.secret_link = `${window.location.origin}/secret/${response.data.secret_id}`;
-              this.passphrase = response.data.passphrase;
-            })
-            .catch(error => {
-              this.isError = true;
-              console.log(error);
-            })
-          e.preventDefault();
-        }
-      }
-    })
+    function postSecret() {
+      event.preventDefault();
+      var form = new FormData(document.getElementById("form"));
+      var results = document.getElementById("results");
+      var secret = form.get("secret");
+      var view_count = form.get("view_count");
+      results.classList.remove('active');
+      fetch('https://secret.slvr.io/encrypt', {
+          method: 'post',
+          body: JSON.stringify({
+            secret: secret,
+            view_count: view_count
+          })
+        })
+        .then((resp) => resp.json())
+        .then(function(data) {
+          var secret_link = `${window.location.origin}/secret/${data.secret_id}`;
+          var respHTML = `<br /><pre id="response" class="mw-50"><a href="${secret_link}" target="_blank">${secret_link}</a><br />passphrase: ${data.passphrase}</pre>`;
+          results.innerHTML = respHTML;
+        })
+        .catch((error) => {
+          var respHTML = `<br /><div class="alert alert-danger" role="alert">There was an error storing secret</div>`;
+          results.innerHTML = respHTML;
+        });
+      results.classList.add('active');
+    }
   </script>
 </body>
+
 </html>
