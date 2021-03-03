@@ -4,11 +4,13 @@ from .helpers import sanitize_view_count, b64s
 
 
 def encrypt(env):
-    if env.get('params', None).get('file_name', None) is not None:
+    if env.get('params').get('file_name') is not None:
         sec = Secret(
             data=env['body'],
             file_name=env['params']['file_name']
         )
+        if type(sec.data) is dict:
+            sec.data = json.dumps(sec.data).encode()
     else:
         sec = Secret(data=env['body']['secret'], view_count=sanitize_view_count(env['body']['view_count']))
     secret_id, password = sec.encrypt()
