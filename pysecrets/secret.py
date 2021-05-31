@@ -1,9 +1,11 @@
-import boto3
 import json
 import os
 import time
+
+import boto3
+
+from .helpers import b64e, b64d, tos
 from .simple_crypt import SimpleCrypt
-from .helpers import b64s, b64e, b64d
 
 
 class Secret:
@@ -31,10 +33,10 @@ class Secret:
         dynamo = boto3.client('dynamodb', region_name='us-east-1')
         item = {
             'secret_id': {'S': self.crypt.secret_id},
-            'nonce': {'S': b64s(self.crypt.nonce)},
-            'salt': {'S': b64s(self.crypt.salt)},
-            'tag': {'S': b64s(self.crypt.tag)},
-            'header': {'S': b64s(self.crypt.header)},
+            'nonce': {'S': tos(b64e(self.crypt.nonce))},
+            'salt': {'S': tos(b64e(self.crypt.salt))},
+            'tag': {'S': tos(b64e(self.crypt.tag))},
+            'header': {'S': tos(b64e(self.crypt.header))},
             'ttl': {'N': str(ttl)},
             'view_count': {'N': str(self.view_count)}
         }
@@ -46,7 +48,7 @@ class Secret:
             })}
             self.__store_file()
         else:
-            item['data'] = {'S': b64s(self.crypt.data)}
+            item['data'] = {'S': tos(b64e(self.crypt.data))}
         dynamo.put_item(TableName='Secrets', Item=item)
 
     @classmethod

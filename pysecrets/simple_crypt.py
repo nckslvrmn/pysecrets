@@ -6,13 +6,13 @@ from .helpers import rand_string
 
 class SimpleCrypt:
     def __init__(self, secret_id=None, data=None, password=None, nonce=None, salt=None, tag=None, header=None):
-        self.secret_id = rand_string(16) if secret_id is None else secret_id
-        self.data = None if data is None else data
-        self.password = rand_string(32, url_safe=False) if password is None else password
-        self.nonce = get_random_bytes(16) if nonce is None else nonce
-        self.salt = get_random_bytes(16) if salt is None else salt
-        self.tag = None if tag is None else tag
-        self.header = get_random_bytes(16) if header is None else header
+        self.secret_id = secret_id or rand_string(16)
+        self.data = data or None
+        self.password = password or rand_string(32, url_safe=False)
+        self.nonce = nonce or get_random_bytes(16)
+        self.salt = salt or get_random_bytes(16)
+        self.tag = tag or None
+        self.header = header or get_random_bytes(16)
 
     def encrypt(self, input_data):
         cipher = self.__init_cipher()

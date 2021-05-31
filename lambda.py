@@ -1,6 +1,7 @@
-from base64 import b64decode as b64d
 import json
+
 from pysecrets.router import router
+from pysecrets.helpers import b64d
 
 
 def handler(event, context):
@@ -13,7 +14,7 @@ def handler(event, context):
     env = {
         'method': event['requestContext']['httpMethod'],
         'path': event['requestContext']['path'],
-        'params': event['queryStringParameters'] if event['queryStringParameters'] is not None else {},
+        'params': event['queryStringParameters'] or {},
         'body': body
     }
 
