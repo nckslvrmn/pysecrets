@@ -1,30 +1,30 @@
-from Cryptodome.Cipher import AES
-from Cryptodome.Protocol.KDF import scrypt
-from Cryptodome.Random import get_random_bytes
+import os
+
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from .helpers import rand_string
 
 
 class SimpleCrypt:
-    def __init__(self, secret_id=None, data=None, password=None, nonce=None, salt=None, tag=None, header=None):
+    def __init__(self, secret_id=None, data=None, password=None, nonce=None, salt=None, header=None):
         self.secret_id = secret_id or rand_string(16)
         self.data = data or None
         self.password = password or rand_string(32, url_safe=False)
-        self.nonce = nonce or get_random_bytes(16)
-        self.salt = salt or get_random_bytes(16)
-        self.tag = tag or None
-        self.header = header or get_random_bytes(16)
+        self.nonce = nonce or os.urandom(16)
+        self.salt = salt or os.urandom(16)
+        self.header = header or os.urandom(16)
 
     def encrypt(self, input_data):
         cipher = self.__init_cipher()
         to_enc = input_data.encode('utf-8') if isinstance(input_data, str) else input_data
-        self.data, self.tag = cipher.encrypt_and_digest(to_enc)
+        self.data = cipher.encrypt(self.nonce, to_enc, self.header)
 
     def decrypt(self):
         cipher = self.__init_cipher()
-        return cipher.decrypt_and_verify(self.data, self.tag)
+        return cipher.decrypt(self.nonce, self.data, self.header)
 
     def __init_cipher(self):
-        key = scrypt(self.password, self.salt, 32, N=2**14, r=8, p=1)
-        cipher = AES.new(key, AES.MODE_GCM, nonce=self.nonce)
-        cipher.update(self.header)
+        scrypt = Scrypt(self.salt, length=32, n=2**14, r=8, p=1)
+        key = scrypt.derive(bytes(self.password, encoding='utf8'))
+        cipher = AESGCM(key)
         return cipher

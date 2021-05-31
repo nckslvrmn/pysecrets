@@ -35,7 +35,6 @@ class Secret:
             'secret_id': {'S': self.crypt.secret_id},
             'nonce': {'S': tos(b64e(self.crypt.nonce))},
             'salt': {'S': tos(b64e(self.crypt.salt))},
-            'tag': {'S': tos(b64e(self.crypt.tag))},
             'header': {'S': tos(b64e(self.crypt.header))},
             'ttl': {'N': str(ttl)},
             'view_count': {'N': str(self.view_count)}
@@ -84,7 +83,6 @@ class Secret:
             data=b64d(data),
             nonce=b64d(resp['Item']['nonce']['S']),
             salt=b64d(resp['Item']['salt']['S']),
-            tag=b64d(resp['Item']['tag']['S']),
             header=b64d(resp['Item']['header']['S'])
         )
         return sec

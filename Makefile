@@ -6,7 +6,6 @@ test:
 function:
 	find . -type d -name "__pycache__" -prune -exec rm -rf {} \;
 	pip3 install --target ./package -Ur requirements.txt
-	rm -rf package/Cryptodome/SelfTest
 	cd package/ && zip -r9 ../function.zip .
 	zip -g -r9 function.zip pysecrets/ lambda.py
 
