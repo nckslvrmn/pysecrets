@@ -60,12 +60,17 @@ class Secret:
             )
         except dynamo.client.ResourceNotFoundException:
             return None
+
         if resp.get('Item') is None:
             return None
-        if resp['Item'].get('file_name', None) is not None:
+
+        if resp['Item'].get('file_name') is not None:
             s3 = boto3.client('s3', region_name='us-east-1')
             try:
-                s3_resp = s3.get_object(Bucket=os.environ.get('S3_BUCKET'), Key=secret_id + '.enc')
+                s3_resp = s3.get_object(
+                    Bucket=os.environ.get('S3_BUCKET'),
+                    Key=secret_id + '.enc'
+                )
                 data = s3_resp['Body'].read().decode('utf-8')
             except s3.client.NoSuchKey:
                 return None
@@ -73,6 +78,7 @@ class Secret:
         else:
             data = resp['Item']['data']['S']
             file_name = None
+
         sec = Secret(
             secret_id=resp['Item']['secret_id']['S'],
             view_count=int(resp['Item']['view_count']['N']),
