@@ -27,14 +27,17 @@ def encrypt(env):
 
 
 def decrypt(env):
-    sec = Secret.load(env['body']['secret_id'])
+    sec = Secret.load(env['body']['secret_id'], env['body']['passphrase'])
     if sec is None:
         return {'statusCode': 404, 'body': ''}
-    decrypted = sec.decrypt(env['body']['passphrase'])
+
+    sec.burn()
+
     if sec.file_name is not None:
-        body = {'data': tos(b64e(decrypted)), 'file_name': sec.file_name}
+        body = {'data': tos(b64e(sec.decrypted)), 'file_name': sec.file_name}
     else:
-        body = {'data': decrypted}
+        body = {'data': sec.decrypted}
+
     return {
         'statusCode': 200,
         'body': json.dumps(body)

@@ -2,9 +2,12 @@ import json
 import os
 import time
 
-import boto3
+from json.decoder import JSONDecodeError
 
-from .helpers import b64e, b64d, tos
+import boto3
+import botocore.exceptions
+
+from .helpers import b64e, b64d, sanitize_view_count, tos
 from .simple_crypt import SimpleCrypt
 
 
@@ -14,6 +17,8 @@ class Secret:
         self.view_count = view_count
         self.secret_id = secret_id
         self.file_name = file_name
+        self.dynamo = boto3.client('dynamodb', region_name='us-east-1')
+        self.s3 = boto3.client('s3', region_name='us-east-1')
 
     def encrypt(self):
         sc = SimpleCrypt()
@@ -21,16 +26,13 @@ class Secret:
         self.crypt = sc
         return sc.secret_id, sc.password
 
-    def decrypt(self, password):
-        self.crypt.password = password
+    def decrypt(self):
         decrypted = self.crypt.decrypt()
-        self.__burn()
         ret = decrypted if self.file_name else decrypted.decode('utf-8')
         return ret
 
     def store(self):
         ttl = int(time.time() + (86400 * int(os.environ.get('TTL_DAYS', 5))))
-        dynamo = boto3.client('dynamodb', region_name='us-east-1')
         item = {
             'secret_id': {'S': self.crypt.secret_id},
             'nonce': {'S': tos(b64e(self.crypt.nonce))},
@@ -40,62 +42,58 @@ class Secret:
             'view_count': {'N': str(self.view_count)}
         }
         if self.file_name is not None:
-            item['file_name'] = {'S': self.file_name}
-            item['s3_info'] = {'S': json.dumps({
-                'bucket': os.environ.get('S3_BUCKET'),
-                'key': self.crypt.secret_id + '.enc'
-            })}
             self.__store_file()
+            self.crypt.encrypt(json.dumps({'file_name': self.file_name}))
+            data = tos(b64e(self.crypt.data))
         else:
-            item['data'] = {'S': tos(b64e(self.crypt.data))}
-        dynamo.put_item(TableName='Secrets', Item=item)
+            data = tos(b64e(self.crypt.data))
+        item['data'] = {'S': data}
+        self.dynamo.put_item(TableName='Secrets', Item=item)
 
     @classmethod
-    def load(self, secret_id):
-        dynamo = boto3.client('dynamodb', region_name='us-east-1')
-        try:
-            resp = dynamo.get_item(
-                TableName='Secrets',
-                Key={'secret_id': {'S': secret_id}}
-            )
-        except dynamo.client.ResourceNotFoundException:
-            return None
+    def load(self, secret_id, passphrase):
+        sec = Secret()
+        resp = sec.dynamo.get_item(
+            TableName='Secrets',
+            Key={'secret_id': {'S': secret_id}}
+        )
 
         if resp.get('Item') is None:
             return None
 
-        if resp['Item'].get('file_name') is not None:
-            s3 = boto3.client('s3', region_name='us-east-1')
-            try:
-                s3_resp = s3.get_object(
-                    Bucket=os.environ.get('S3_BUCKET'),
-                    Key=secret_id + '.enc'
-                )
-                data = s3_resp['Body'].read().decode('utf-8')
-            except s3.client.NoSuchKey:
-                return None
-            file_name = resp['Item']['file_name']['S']
-        else:
-            data = resp['Item']['data']['S']
-            file_name = None
-
-        sec = Secret(
-            secret_id=resp['Item']['secret_id']['S'],
-            view_count=int(resp['Item']['view_count']['N']),
-            file_name=file_name
-        )
+        sec.secret_id = resp['Item']['secret_id']['S']
+        sec.view_count = sanitize_view_count(resp['Item']['view_count']['N'])
         sec.crypt = SimpleCrypt(
             secret_id=resp['Item']['secret_id']['S'],
-            data=b64d(data),
+            password=passphrase,
+            data=b64d(resp['Item']['data']['S']),
             nonce=b64d(resp['Item']['nonce']['S']),
             salt=b64d(resp['Item']['salt']['S']),
             header=b64d(resp['Item']['header']['S'])
         )
+        sec.decrypted = sec.decrypt()
+
+        try:
+            file_name = json.loads(sec.decrypted).get('file_name')
+        except (JSONDecodeError, TypeError):
+            return sec
+
+        if file_name is not None:
+            sec.file_name = file_name
+            try:
+                s3_resp = sec.s3.get_object(
+                    Bucket=os.environ.get('S3_BUCKET'),
+                    Key=resp['Item']['secret_id']['S'] + '.enc'
+                )
+                sec.crypt.data = b64d(s3_resp['Body'].read())
+            except botocore.exceptions.ClientError:
+                return None
+            sec.decrypted = sec.crypt.decrypt()
+
         return sec
 
     def __store_file(self):
-        s3 = boto3.client('s3', region_name='us-east-1')
-        s3.put_object(
+        self.s3.put_object(
             Bucket=os.environ.get('S3_BUCKET'),
             ACL='private',
             Key=self.crypt.secret_id + '.enc',
@@ -103,20 +101,18 @@ class Secret:
             ServerSideEncryption='aws:kms'
         )
 
-    def __burn(self):
-        dynamo = boto3.client('dynamodb', region_name='us-east-1')
-        s3 = boto3.client('s3', region_name='us-east-1')
+    def burn(self):
         self.view_count -= 1
         if self.view_count > 0:
-            dynamo.update_item(
+            self.dynamo.update_item(
                 TableName='Secrets',
                 Key={'secret_id': {'S': self.secret_id}},
                 AttributeUpdates={'view_count': {'Value': {'N': str(self.view_count)}, 'Action': 'PUT'}}
             )
         else:
             if self.file_name is not None:
-                s3.delete_object(Bucket=os.environ.get('S3_BUCKET'), Key=self.secret_id + '.enc')
-            dynamo.delete_item(
+                self.s3.delete_object(Bucket=os.environ.get('S3_BUCKET'), Key=self.secret_id + '.enc')
+            self.dynamo.delete_item(
                 TableName='Secrets',
                 Key={'secret_id': {'S': self.secret_id}}
             )
