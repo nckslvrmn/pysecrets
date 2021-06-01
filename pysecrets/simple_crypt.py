@@ -10,7 +10,7 @@ class SimpleCrypt:
         self.secret_id = secret_id or rand_string(16)
         self.data = data or None
         self.password = password or rand_string(32, url_safe=False)
-        self.nonce = nonce or os.urandom(16)
+        self.nonce = nonce or os.urandom(96)
         self.salt = salt or os.urandom(16)
         self.header = header or os.urandom(16)
 
