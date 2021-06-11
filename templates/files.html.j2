@@ -3,8 +3,7 @@
 
 <head>
   <title>Secrets</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css" integrity="sha512-P5MgMn1jBN01asBgU0z60Qk4QxiXo86+wlFahKrsQf37c9cro517WzVSPPV1tDKzhku2iJ2FVgL67wG03SGnNA=="
-    crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.0.1/css/bootstrap.min.css" integrity="sha512-Ez0cGzNzHR1tYAv56860NLspgUGuQw16GiOOp/I2LuTmpSK9xDXlgJz3XN4cnpXWDmkNBKXR/VDMTCnAaEooxA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
     html,
     body {
@@ -42,47 +41,38 @@
     <h6 class="text-truncate">&nbsp;Enter a password, secret message, or private link below.</h6>
     <h6 class="text-truncate">&nbsp;A secret link only works for the number of times specified and then disappears forever.</h6>
     <br />
-    <form onsubmit="postSecret()" id="form" class="form-signin">
-      <div class="form-group">
-        <textarea type="text" name="secret" class="form-control" autocomplete="off" placeholder="content to be encrypted" rows="6"></textarea>
-      </div>
-      <div class="form-group form-inline">
-        <label for="ViewCount">View Count:&nbsp;&nbsp;&nbsp;</label>
-        <select name="view_count" class="form-control" id="ViewCount">
-          <option selected>1</option>
-          <option>2</option>
-          <option>3</option>
-          <option>4</option>
-          <option>5</option>
-          <option>6</option>
-          <option>7</option>
-          <option>8</option>
-          <option>9</option>
-          <option>10</option>
-        </select>
+    <form onsubmit="postFile()" id="form" class="form-signin">
+      <div class="mb-3 form-group">
+        <label for="file" class="form-label">File to encrypt</label>
+        <input class="form-control" id="file" ref="file" type="file">
       </div>
       <br />
-      <div class="form-group">
-        <input type="submit" class="btn btn-primary btn-lg btn-block" value="Create Secret Link">
+      <div class="form-group d-grid gap-2">
+        <input type="submit" class="btn btn-primary" value="Create Secret Link">
       </div>
     </form>
     <div id="results"></div>
   </div>
 
   <script>
-    function postSecret() {
+    function postFile() {
       event.preventDefault();
-      var form = new FormData(document.getElementById("form"));
+      var file = document.getElementById("file");
       var results = document.getElementById("results");
-      var secret = form.get("secret");
-      var view_count = form.get("view_count");
       results.classList.remove('active');
-      fetch('https://secret.slvr.io/encrypt', {
+      var fileSize = file.files[0].size / 1024 / 1024;
+      if (fileSize > 10) {
+        alert('File size exceeds 10 MB');
+        file.value = '';
+      }
+      var url = new URL('https://{{ base_domain }}/encrypt');
+      var params = {
+        file_name: file.files[0].name
+      };
+      url.search = new URLSearchParams(params).toString();
+      fetch(url, {
           method: 'post',
-          body: JSON.stringify({
-            secret: secret,
-            view_count: view_count
-          })
+          body: file.files[0]
         })
         .then(function(resp) {
           if(resp.ok) {
@@ -100,7 +90,7 @@
           results.classList.add('active');
         })
         .catch((error) => {
-          var respHTML = `<br /><div class="alert alert-danger" role="alert">There was an error storing secret</div>`;
+          var respHTML = `<br /><div class="alert alert-danger" role="alert">There was an error storing the secret file</div>`;
           results.innerHTML = respHTML;
           results.classList.add('active');
         });
