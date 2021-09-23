@@ -1,7 +1,4 @@
 import json
-import os
-
-from jinja2 import Template
 
 from .helpers import sanitize_view_count, b64e, tos
 from .secret import Secret
@@ -47,33 +44,41 @@ def decrypt(env):
     }
 
 
-def render_html(env, template_name):
-    secret_id = None
-    if env['path'].startswith('/secret/'):
-        secret_id = env['path'].split('/')[-1]
+def serve_static(asset):
+    with open(f"static/{asset['path']}") as file:
+        static = file.read()
 
-    with open(f'templates/{template_name}.html.j2') as file:
-        template = Template(file.read())
-
-    rendered = template.render(
-        base_domain=os.environ.get('BASE_DOMAIN'),
-        secret_id=secret_id
-    )
-    
     return {
         'statusCode': 200,
-        'headers': {'Content-Type': 'text/html'},
-        'body': rendered
+        'headers': {'Content-Type': asset['type']},
+        'body': static
     }
 
 
 def router(env):
-    if env['path'] == '/':
-        return render_html(env, 'index')
-    elif env['path'] == '/files':
-        return render_html(env, 'files')
+    static_assets = {
+      '/': {
+        'path': 'index.html',
+        'type': 'text/html'
+      },
+      '/files': {
+        'path': 'files.html',
+        'type': 'text/html'
+      },
+      '/site.css': {
+        'path': 'site.css',
+        'type': 'text/css'
+      },
+      '/main.js': {
+        'path': 'main.js',
+        'type': 'text/javascript'
+      }
+    }
+
+    if env['path'] in static_assets.keys():
+        return serve_static(static_assets[env['path']])
     elif env['path'].startswith('/secret/'):
-        return render_html(env, 'secret')
+        return serve_static({'path': 'secret.html', 'type': 'text/html'})
     elif env['path'] == '/encrypt':
         return encrypt(env)
     elif env['path'] == '/decrypt':
