@@ -1,84 +1,52 @@
 function postSecret() {
   event.preventDefault();
-  var form = new FormData(document.getElementById("form"));
   var results = document.getElementById("results");
-  var secret = form.get("secret");
-  var view_count = form.get("view_count");
   results.classList.remove('active');
-  fetch(`${window.location.origin}/encrypt`, {
-      method: 'post',
-      body: JSON.stringify({
-        secret: secret,
-        view_count: view_count
-      })
-    })
-    .then(function(resp) {
-      if(resp.ok) {
-        return resp.json();
-      } else {
-        var respHTML = `<br /><div class="alert alert-danger" role="alert">There was an error storing secret</div>`;
-        results.innerHTML = respHTML;
-        results.classList.add('active');
-      }
-    })
-    .then(function(data) {
-      var secret_link = `${window.location.origin}/secret/${data.secret_id}`;
-      var respHTML = `<br /><pre id="response" class="mw-50"><a href="${secret_link}" target="_blank">${secret_link}</a><br />passphrase: ${data.passphrase}</pre>`;
-      results.innerHTML = respHTML;
-      results.classList.add('active');
-    })
-    .catch((error) => {
-      var respHTML = `<br /><div class="alert alert-danger" role="alert">There was an error storing secret</div>`;
-      results.innerHTML = respHTML;
-      results.classList.add('active');
-    });
-}
-
-function postFile() {
-  event.preventDefault();
   var file = document.getElementById("file");
-  var results = document.getElementById("results");
-  results.classList.remove('active');
-  var fileSize = file.files[0].size / 1024 / 1024;
-  if (fileSize > 10) {
-    var respHTML = `<br /><div class="alert alert-danger" role="alert">File exceeds 10mb, cannot upload</div>`;
-    results.innerHTML = respHTML;
-    results.classList.add('active');
-    file.value = '';
-    return;
+  if (file != null) {
+    var fileSize = file.files[0].size / 1024 / 1024;
+    if (fileSize > 10) {
+      setResp('<br /><div class="alert alert-danger" role="alert">File exceeds 10mb, cannot upload</div>');
+      file.value = '';
+      return;
+    }
+    var url = new URL(`${window.location.origin}/encrypt`);
+    var params = {
+      file_name: file.files[0].name
+    };
+    url.search = new URLSearchParams(params).toString();
+    encrypt(url, file.files[0])
+  } else {
+    var form = new FormData(document.getElementById("form"));
+    var secret = form.get("secret");
+    var view_count = form.get("view_count");
+    encrypt(`${window.location.origin}/encrypt`, JSON.stringify({
+      secret: secret,
+      view_count: view_count
+    }))
   }
-  var url = new URL(`${window.location.origin}/encrypt`);
-  var params = {
-    file_name: file.files[0].name
-  };
-  url.search = new URLSearchParams(params).toString();
-  fetch(url, {
-      method: 'post',
-      body: file.files[0]
-    })
-    .then(function(resp) {
-      if(resp.ok) {
-        return resp.json();
-      } else {
-        var respHTML = `<br /><div class="alert alert-danger" role="alert">There was an error storing the secret file</div>`;
-        results.innerHTML = respHTML;
-        results.classList.add('active');
-      }
-    })
-    .then(function(data) {
-      var secret_link = `${window.location.origin}/secret/${data.secret_id}`;
-      var respHTML = `<br /><pre id="response" class="mw-50"><a href="${secret_link}" target="_blank">${secret_link}</a><br />passphrase: ${data.passphrase}</pre>`;
-      results.innerHTML = respHTML;
-      results.classList.add('active');
-    })
-    .catch((error) => {
-      var respHTML = `<br /><div class="alert alert-danger" role="alert">There was an error storing the secret file</div>`;
-      results.innerHTML = respHTML;
-      results.classList.add('active');
-    });
 }
 
-function getSecret(e) {
+function encrypt(url, body) {
+  results.classList.remove('active');
+  fetch(url, {
+    method: 'post',
+    body: body
+  }).then(function(resp) {
+    if (resp.ok) {
+      return resp.json();
+    } else {
+      setResp('<br /><div class="alert alert-danger" role="alert">There was an error storing secret</div>');
+    }
+  }).then(function(data) {
+    var secret_link = `${window.location.origin}/secret/${data.secret_id}`;
+    setResp(`<br /><pre id="response" class="mw-50"><a href="${secret_link}" target="_blank">${secret_link}</a><br />passphrase: ${data.passphrase}</pre>`);
+  }).catch((error) => {
+    setResp('<br /><div class="alert alert-danger" role="alert">There was an error storing secret</div>');
+  });
+}
+
+function getSecret() {
   event.preventDefault();
   var form = new FormData(document.getElementById("form"));
   var password = form.get("password");
@@ -87,36 +55,32 @@ function getSecret(e) {
   results.classList.remove('active');
   var status_code = 0;
   fetch(`${window.location.origin}/decrypt`, {
-      method: "post",
-      body: JSON.stringify({
-        passphrase: password,
-        secret_id: secret_id
-      })
+    method: "post",
+    body: JSON.stringify({
+      passphrase: password,
+      secret_id: secret_id
     })
-    .then(resp => {
-      status_code = resp.status;
-      return resp.json();
-    })
-    .then(function(data) {
-      if (data.file_name != null) {
-        forceFileDownload(data);
-      } else {
-        var respHTML = `<br /><pre id="response" class="mw-50">${data.data}</pre>`;
-        results.innerHTML = respHTML;
-        results.classList.add("active");
-      }
-    })
-    .catch((error) => {
-      if (status_code === 404) {
-        var respHTML = '<br /><div class="alert alert-warning" role="alert">Secret has either already been viewed<br />or your passphrase is incorrect.</div>';
-        results.innerHTML = respHTML;
-        results.classList.add("active");
-      } else {
-        var respHTML = '<br /><div class="alert alert-danger" role="alert">There was an error retrieving secret</div>';
-        results.innerHTML = respHTML;
-        results.classList.add("active");
-      }
-    });
+  }).then(resp => {
+    status_code = resp.status;
+    return resp.json();
+  }).then(function(data) {
+    if (data.file_name != null) {
+      forceFileDownload(data);
+    } else {
+      setResp(`<br /><pre id="response" class="mw-50">${data.data}</pre>`);
+    }
+  }).catch((error) => {
+    if (status_code === 404) {
+      setResp('<br /><div class="alert alert-warning" role="alert">Secret has either already been viewed<br />or your passphrase is incorrect.</div>');
+    } else {
+      setResp('<br /><div class="alert alert-danger" role="alert">There was an error retrieving secret</div>');
+    }
+  });
+}
+
+function setResp(content) {
+  results.innerHTML = content;
+  results.classList.add('active');
 }
 
 function forceFileDownload(response) {
