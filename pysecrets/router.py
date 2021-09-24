@@ -1,7 +1,4 @@
 import json
-import os
-
-from jinja2 import Template
 
 from .helpers import sanitize_view_count, b64e, tos
 from .secret import Secret
@@ -21,7 +18,6 @@ def encrypt(env):
     sec.store()
     return {
         'statusCode': 200,
-        'headers': {'Content-Type': 'application/json'},
         'body': json.dumps({
             'secret_id': secret_id,
             'passphrase': password
@@ -47,34 +43,8 @@ def decrypt(env):
     }
 
 
-def render_html(env, template_name):
-    secret_id = None
-    if env['path'].startswith('/secret/'):
-        secret_id = env['path'].split('/')[-1]
-
-    with open(f'templates/{template_name}.html.j2') as file:
-        template = Template(file.read())
-
-    rendered = template.render(
-        base_domain=os.environ.get('BASE_DOMAIN'),
-        secret_id=secret_id
-    )
-    
-    return {
-        'statusCode': 200,
-        'headers': {'Content-Type': 'text/html'},
-        'body': rendered
-    }
-
-
 def router(env):
-    if env['path'] == '/':
-        return render_html(env, 'index')
-    elif env['path'] == '/files':
-        return render_html(env, 'files')
-    elif env['path'].startswith('/secret/'):
-        return render_html(env, 'secret')
-    elif env['path'] == '/encrypt':
+    if env['path'] == '/encrypt':
         return encrypt(env)
     elif env['path'] == '/decrypt':
         return decrypt(env)
