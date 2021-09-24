@@ -18,7 +18,6 @@ def encrypt(env):
     sec.store()
     return {
         'statusCode': 200,
-        'headers': {'Content-Type': 'application/json'},
         'body': json.dumps({
             'secret_id': secret_id,
             'passphrase': password
@@ -44,42 +43,8 @@ def decrypt(env):
     }
 
 
-def serve_static(asset):
-    with open(f"static/{asset['path']}") as file:
-        static = file.read()
-
-    return {
-        'statusCode': 200,
-        'headers': {'Content-Type': asset['type']},
-        'body': static
-    }
-
-
 def router(env):
-    static_assets = {
-      '/': {
-        'path': 'index.html',
-        'type': 'text/html'
-      },
-      '/files': {
-        'path': 'files.html',
-        'type': 'text/html'
-      },
-      '/site.css': {
-        'path': 'site.css',
-        'type': 'text/css'
-      },
-      '/main.js': {
-        'path': 'main.js',
-        'type': 'text/javascript'
-      }
-    }
-
-    if env['path'] in static_assets.keys():
-        return serve_static(static_assets[env['path']])
-    elif env['path'].startswith('/secret/'):
-        return serve_static({'path': 'secret.html', 'type': 'text/html'})
-    elif env['path'] == '/encrypt':
+    if env['path'] == '/encrypt':
         return encrypt(env)
     elif env['path'] == '/decrypt':
         return decrypt(env)
