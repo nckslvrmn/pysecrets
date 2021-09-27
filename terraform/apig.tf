@@ -1,22 +1,27 @@
-resource "aws_apigatewayv2_api" "secret" {
-  name          = "secrets"
-  protocol_type = "HTTP"
+resource "aws_api_gateway_rest_api" "secrets" {
+  name = "secrets"
 
-  cors_configuration {
-    allow_origins = ["https://${var.main_domain_name}"]
-    allow_methods = ["POST"]
-    allow_headers = ["*"]
+  endpoint_configuration {
+    types = ["REGIONAL"]
   }
 }
 
-resource "aws_apigatewayv2_stage" "default" {
-  api_id      = aws_apigatewayv2_api.secret.id
-  name        = "$default"
-  auto_deploy = true
+resource "aws_api_gateway_deployment" "main" {
+  rest_api_id = aws_api_gateway_rest_api.secrets.id
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
-resource "aws_apigatewayv2_domain_name" "secret" {
-  domain_name = var.api_domain_name
+resource "aws_api_gateway_stage" "main" {
+  deployment_id = aws_api_gateway_deployment.main.id
+  rest_api_id   = aws_api_gateway_rest_api.secrets.id
+  stage_name    = "main"
+}
+
+resource "aws_apigatewayv2_domain_name" "secrets" {
+  domain_name = var.domain_name
 
   domain_name_configuration {
     certificate_arn = var.acm_arn
@@ -25,48 +30,9 @@ resource "aws_apigatewayv2_domain_name" "secret" {
   }
 }
 
-resource "aws_apigatewayv2_api_mapping" "domain" {
-  api_id      = aws_apigatewayv2_api.secret.id
-  domain_name = aws_apigatewayv2_domain_name.secret.id
-  stage       = aws_apigatewayv2_stage.default.id
+resource "aws_apigatewayv2_api_mapping" "secrets" {
+  api_id      = aws_api_gateway_rest_api.secrets.id
+  domain_name = aws_apigatewayv2_domain_name.secrets.id
+  stage       = aws_api_gateway_stage.main.stage_name
 }
 
-resource "aws_apigatewayv2_route" "encrypt" {
-  api_id    = aws_apigatewayv2_api.secret.id
-  route_key = "POST /encrypt"
-  target    = "integrations/${aws_apigatewayv2_integration.encrypt.id}"
-}
-
-resource "aws_apigatewayv2_integration" "encrypt" {
-  api_id           = aws_apigatewayv2_api.secret.id
-  integration_type = "AWS_PROXY"
-
-  description            = "encrypt"
-  integration_method     = "POST"
-  integration_uri        = aws_lambda_function.secrets.invoke_arn
-  payload_format_version = "1.0"
-
-  lifecycle {
-    ignore_changes = [passthrough_behavior]
-  }
-}
-
-resource "aws_apigatewayv2_route" "decrypt" {
-  api_id    = aws_apigatewayv2_api.secret.id
-  route_key = "POST /decrypt"
-  target    = "integrations/${aws_apigatewayv2_integration.decrypt.id}"
-}
-
-resource "aws_apigatewayv2_integration" "decrypt" {
-  api_id           = aws_apigatewayv2_api.secret.id
-  integration_type = "AWS_PROXY"
-
-  description            = "decrypt"
-  integration_method     = "POST"
-  integration_uri        = aws_lambda_function.secrets.invoke_arn
-  payload_format_version = "1.0"
-
-  lifecycle {
-    ignore_changes = [passthrough_behavior]
-  }
-}

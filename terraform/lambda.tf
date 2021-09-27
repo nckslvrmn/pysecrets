@@ -3,7 +3,7 @@ resource "aws_lambda_function" "secrets" {
   function_name = "secrets"
   role          = aws_iam_role.secrets.arn
   handler       = "lambda.handler"
-  runtime       = "python3.8"
+  runtime       = "python3.9"
   memory_size   = 2048
   timeout       = 5
 
@@ -13,6 +13,10 @@ resource "aws_lambda_function" "secrets" {
       TTL_DAYS  = var.ttl_days
     }
   }
+
+  lifecycle {
+    ignore_changes = [filename]
+  }
 }
 
 resource "aws_lambda_permission" "allow_apig" {
@@ -20,16 +24,5 @@ resource "aws_lambda_permission" "allow_apig" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.secrets.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.secret.execution_arn}/*/*/*"
-}
-
-resource "aws_lambda_function" "secrets_rewriter" {
-  filename      = "${path.module}/placeholder.zip"
-  function_name = "secrets_rewriter"
-  role          = aws_iam_role.secrets_rewriter.arn
-  handler       = "index.handler"
-  runtime       = "nodejs12.x"
-  memory_size   = 128
-  timeout       = 1
-  publish       = true
+  source_arn    = "${aws_api_gateway_rest_api.secrets.execution_arn}/*/*/*"
 }
