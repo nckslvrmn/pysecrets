@@ -5,39 +5,41 @@ A light-weight, ephemeral secret sharing service. Secrets uses a secure PBKDF an
 
 ## Getting Started
 
-Secrets requires python3.8 and [cryptography](https://pypi.org/project/cryptography/) to support the mode of encryption used by the service.
+Secrets requires python3.9 and [cryptography](https://pypi.org/project/cryptography/) to support the mode of encryption used by the service.
 Secrets is also intended to run as AWS Lambda functions, with a static UI hosted in a place of your choosing.
 
 ## Dependencies
 
-Secrets uses an AWS Dynamo DB table for storing all of its string secrets and an S3 bucket for encrypted files. Secrets requires that the role the Lambda executes with has the proper permissions to the Dynamo Table and S3 Bucket.
-The Dynamo table and S3 Bucket need to exist beforehand.
+Secrets uses an AWS Dynamo DB table for storing all of its string secrets and S3 buckets for the static ui and encrypted files.
+Secrets includes all the terraform necessary to create the infrastructure required to run a copy of the application.
 
 ## Installation
 
-Once the dependencies have been set up, begin by running `make function`.
-This will build the Lambda function zip file that will be uploaded to AWS.
+The first step is to run the provided terraform in your AWS account. This directory can be sourced as a terraform module and the variables defined can be passed in. [Here's a link](https://www.terraform.io/docs/language/modules/index.html) for more information on that.
+Once the infrastructure has been set up, run `make` to build the Lambda function zip file that will be uploaded to AWS.
+From there upload it using this command `aws lambda update-function-code --function-name secrets --zip-file fileb://function.zip`.
+Lastly, run `aws s3 cp --region us-east-1 static/ s3://BUCKET_NAME` to upload the UI to the site bucket terraform created.
 
 ## Configuration
 
 To ensure the best security practices, the methods used for KDF and encryption/decryption have been baked into the code itself.
-There are a few options that can be configured. All of these should be passed in to the functions.
-
-Within the environments hash, the options are:
+There are a few options that can be configured. All of these should be passed in to the function via environment variables.
 
 VARIABLE     | DEFAULT | DESCRIPTION
 -------------|---------|---------------------------------------------------------
 TTL_DAYS     | 5       | Configures the TTL that the secret records will have in Dynamo.
 S3_BUCKET    | nil     | Tells the server in which S3 bucket to store encrypted files.
 
+If using the provided terraform, `TTL_DAYS` is an option that can be passed in, and `S3_BUCKET` is predefined with the proper value.
+
 ## API Usage
 
 Because pysecrets uses the SPA + API architecture, the APIs can be accessed directly. To interact with the APIs, here are some examples via CURL. To send and receive a string based secret:
 ```
-~ ❯ curl -X POST https://API_URL/encrypt -d '{"secret": "super secret text", "view_count": 1}'
+~ ❯ curl -X POST https://URL/encrypt -d '{"secret": "super secret text", "view_count": 1}'
 {"secret_id": "HrVfOn1aoqKHeRKi", "passphrase": "iT95_B9p9PSMcP-hH9OGS81w9FZVTEpf"}
 
-~ ❯ curl -X POST https://API_URL/decrypt -d '{"secret_id": "HrVfOn1aoqKHeRKi", "passphrase": "iT95_B9p9PSMcP-hH9OGS81w9FZVTEpf"}'
+~ ❯ curl -X POST https://URL/decrypt -d '{"secret_id": "HrVfOn1aoqKHeRKi", "passphrase": "iT95_B9p9PSMcP-hH9OGS81w9FZVTEpf"}'
 {"data": "super secret text"}
 ```
 The string based secret sharing works by passing the `encrypt` route secret text and a view count via a JSON payload. To retreive the secret, send the `decrypt` route the generated secret id and passphrase.
@@ -47,10 +49,10 @@ The file based API works similarly:
 ~ ❯ cat test.txt
 hello
 
-~ ❯ curl -X POST "https://API_URL/encrypt?file_name=test.txt" -d '@test.txt'
+~ ❯ curl -X POST "https://URL/encrypt?file_name=test.txt" -d '@test.txt'
 {"secret_id": "97tfNQQBAl0w2zNE", "passphrase": "CPIX4PeLALaLaNLVFM~oNjM!N&bjZ377"}
 
-~ ❯ curl -X POST https://API_URL/decrypt -d '{"secret_id": "97tfNQQBAl0w2zNE", "passphrase": "CPIX4PeLALaLaNLVFM~oNjM!N&bjZ377"}'
+~ ❯ curl -X POST https://URL/decrypt -d '{"secret_id": "97tfNQQBAl0w2zNE", "passphrase": "CPIX4PeLALaLaNLVFM~oNjM!N&bjZ377"}'
 {"data": "aGVsbG8=", "file_name": "test.txt"}
 
 ~ ❯ echo "aGVsbG8=" | base64 -d

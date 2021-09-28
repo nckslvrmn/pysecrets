@@ -12,12 +12,24 @@ resource "aws_api_gateway_deployment" "main" {
   lifecycle {
     create_before_destroy = true
   }
+
+  depends_on = [
+    aws_api_gateway_method_response.root_response_200,
+    aws_api_gateway_method_response.static_response_200,
+    aws_api_gateway_method_response.secret_id_response_200
+  ]
 }
 
 resource "aws_api_gateway_stage" "main" {
   deployment_id = aws_api_gateway_deployment.main.id
   rest_api_id   = aws_api_gateway_rest_api.secrets.id
   stage_name    = "main"
+
+  depends_on = [
+    aws_api_gateway_method_response.root_response_200,
+    aws_api_gateway_method_response.static_response_200,
+    aws_api_gateway_method_response.secret_id_response_200
+  ]
 }
 
 resource "aws_apigatewayv2_domain_name" "secrets" {
