@@ -1,17 +1,15 @@
 pysecrets
 ===
 
-A light-weight, ephemeral secret sharing service. Secrets uses a secure PBKDF and the latest AES encryption standards to ensure the confidentiality, integrity, and authenticity of data sent through the service.
-
-## Getting Started
-
-Secrets requires python3.9 and [cryptography](https://pypi.org/project/cryptography/) to support the mode of encryption used by the service.
-Secrets is also intended to run as AWS Lambda functions, with a static UI hosted in a place of your choosing.
+A light-weight, ephemeral secret sharing service. pysecrets uses a secure PBKDF and the latest AES encryption standards to ensure the confidentiality, integrity, and authenticity of data sent through the service. Pysecrets is intended to run in AWS as a serverless application, with a static UI hosted in an S3 bucket.
 
 ## Dependencies
 
-Secrets uses an AWS Dynamo DB table for storing all of its string secrets and S3 buckets for the static ui and encrypted files.
-Secrets includes all the terraform necessary to create the infrastructure required to run a copy of the application.
+Pysecrets requires python3.9 and the [cryptography](https://pypi.org/project/cryptography/) module to support the mode of encryption used by the service.
+
+Pysecrets uses AWS serverless services including: Lambda, DynamoDB, Api Gateway, and S3. These are used for the application runtime and UI, as well as storage of encrypted secrets.
+
+All the terraform necessary to create the infrastructure required to run a copy of the application is included in the `terraform/` directory.
 
 ## Installation
 
@@ -64,11 +62,11 @@ The same `encrypt` route is used but this time, the data payload is the file to 
 
 Ephemeral Secret service utilizes the best in business algorithms and functions for proper encryption at rest that guarantees information security. There is another domain of security however not covered by the service itself. That is encryption in transit. As previously mentioned, an nginx configuration file is provided that can serve as the web server proxy. It is highly reccomended to follow or use this configuration as it contains all the options required for modern best practices on encryption in transit. When configuring these best practice options, there is a somewhat significant reduction in comptibility for older devices but considering the security gains this is a worthwhile sacrifice.
 
-Ephemeral Secrets uses three main security standards to ensure full information security.
+Pysecrets uses three main security standards to ensure full information security.
 
 ### AES
 
-The first of which is the encryption/decryption mode. Secrets uses `AES-256-GCM`. This uses the AES standard with a key size of 256 bits and the GCM mode. GCM is a combination of Galois field authentication and a counter mode algorithm and can be further documented [here](https://en.wikipedia.org/wiki/Galois/Counter_Mode).
+The first of which is the encryption/decryption mode. Pysecrets uses `AES-256-GCM`. This uses the AES standard with a key size of 256 bits and the GCM mode. GCM is a combination of Galois field authentication and a counter mode algorithm and can be further documented [here](https://en.wikipedia.org/wiki/Galois/Counter_Mode).
 GCM was designed to be performant (via parallelized operations) and to guarantee authenticity and confidentiality. By using an AEAD (authenticated encryption with associated data) cipher mode, one can guarantee that the ciphertext maintains integrity upon decryption and will fail to decrypt if someone attempts to modify the ciphertext while it remains encrypted.
 
 ### Scrypt
