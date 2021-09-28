@@ -15,10 +15,10 @@ Secrets includes all the terraform necessary to create the infrastructure requir
 
 ## Installation
 
-The first step is to run the provided terraform in your AWS account. This directory can be sourced as a terraform module and the variables defined can be passed in. [Here's a link](https://www.terraform.io/docs/language/modules/index.html) for more information on that.
-Once the infrastructure has been set up, run `make` to build the Lambda function zip file that will be uploaded to AWS.
-From there upload it using this command `aws lambda update-function-code --function-name secrets --zip-file fileb://function.zip`.
-Lastly, run `aws s3 cp --region us-east-1 static/ s3://BUCKET_NAME` to upload the UI to the site bucket terraform created.
+1. The first step is to run the provided terraform in your AWS account. This directory can be sourced as a terraform module and the variables defined can be passed in. [Here's a link](https://www.terraform.io/docs/language/modules/index.html) for more information on that.
+2. Once the infrastructure has been set up, run `make` to build the Lambda function zip file that will be uploaded to AWS.
+3. From there upload it using this command `aws lambda update-function-code --function-name secrets --zip-file fileb://function.zip`.
+4. Lastly, run `aws s3 cp --region us-east-1 static/ s3://BUCKET_NAME` to upload the UI to the site bucket terraform created.
 
 ## Configuration
 
