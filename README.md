@@ -5,7 +5,7 @@ A light-weight, ephemeral secret sharing service. pysecrets uses a secure PBKDF 
 
 ## Dependencies
 
-Pysecrets requires python3.9 and the [cryptography](https://pypi.org/project/cryptography/) module to support the mode of encryption used by the service.
+Pysecrets requires python3.9, the [cryptography](https://pypi.org/project/cryptography/) module, and [boto3](https://pypi.org/project/boto3/) (included in the lambda runtime already), to support the mode of encryption used by the service.
 
 Pysecrets uses AWS serverless services including: Lambda, DynamoDB, Api Gateway, and S3. These are used for the application runtime and UI, as well as storage of encrypted secrets.
 
