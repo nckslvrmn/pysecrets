@@ -6,12 +6,13 @@ from .secret import Secret
 
 def encrypt(env):
     if env.get('params').get('file_name') is not None:
+        body = env['body'].encode() if isinstance(env['body'], str) else env['body']
+        if type(body) is dict:
+            body = json.dumps(body).encode()
         sec = Secret(
-            data=env['body'],
+            data=b64e(body),
             file_name=env['params']['file_name']
         )
-        if type(sec.data) is dict:
-            sec.data = json.dumps(sec.data).encode()
     else:
         sec = Secret(data=env['body']['secret'], view_count=sanitize_view_count(env['body']['view_count']))
     secret_id, password = sec.encrypt()
@@ -33,7 +34,7 @@ def decrypt(env):
     sec.burn()
 
     if sec.file_name is not None:
-        body = {'data': tos(b64e(sec.decrypted)), 'file_name': sec.file_name}
+        body = {'data': tos(sec.decrypted), 'file_name': sec.file_name}
     else:
         body = {'data': sec.decrypted}
 

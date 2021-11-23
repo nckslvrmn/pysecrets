@@ -5,8 +5,8 @@ function postSecret() {
   var file = document.getElementById("file");
   if (file != null) {
     var fileSize = file.files[0].size / 1024 / 1024;
-    if (fileSize > 10) {
-      setResp('<br /><div class="alert alert-danger" role="alert">File exceeds 10mb, cannot upload</div>');
+    if (fileSize > 4) {
+      setResp(results, 'alert', 'File exceeds 4mb, cannot upload');
       file.value = '';
       return;
     }
@@ -36,13 +36,13 @@ function encrypt(url, body) {
     if (resp.ok) {
       return resp.json();
     } else {
-      setResp('<br /><div class="alert alert-danger" role="alert">There was an error storing secret</div>');
+      setResp(results, 'alert', 'There was an error storing secret');
     }
   }).then(function(data) {
     var secret_link = `${window.location.origin}/secret/${data.secret_id}`;
-    setResp(`<br /><pre id="response" class="mw-50"><a href="${secret_link}" target="_blank">${secret_link}</a><br />passphrase: ${data.passphrase}</pre>`);
+    setResp(results, 'success', `<br /><a href="${secret_link}" target="_blank">${secret_link}</a><br />passphrase: ${data.passphrase}`);
   }).catch((error) => {
-    setResp('<br /><div class="alert alert-danger" role="alert">There was an error storing secret</div>');
+    setResp(results, 'alert', 'There was an error storing secret');
   });
 }
 
@@ -67,19 +67,32 @@ function getSecret() {
     if (data.file_name != null) {
       forceFileDownload(data);
     } else {
-      setResp(`<br /><pre id="response" class="mw-50">${data.data}</pre>`);
+      setResp(results, 'success', data.data, true);
     }
   }).catch((error) => {
     if (status_code === 404) {
-      setResp('<br /><div class="alert alert-warning" role="alert">Secret has either already been viewed<br />or your passphrase is incorrect.</div>');
+      setResp(results, 'warning', 'Secret has either already been viewed<br />or your passphrase is incorrect.');
     } else {
-      setResp('<br /><div class="alert alert-danger" role="alert">There was an error retrieving secret</div>');
+      setResp(results, 'alert', 'There was an error retrieving secret');
     }
   });
 }
 
-function setResp(content) {
-  results.innerHTML = content;
+function setResp(results, level, content, literal = false) {
+  if (level == 'alert') {
+    var resp_html = `<br /><div id="response" class="alert alert-danger" role="alert"></div>`;
+  } else if (level == 'warning') {
+    var resp_html = `<br /><div id="response" class="alert alert-warning" role="alert"></div>`;
+  } else {
+    var resp_html = '<br /><pre id="response" class="mw-50"></pre>';
+  }
+  results.innerHTML = resp_html;
+  var response = document.getElementById("response");
+  if (literal) {
+    response.appendChild(document.createTextNode(content));
+  } else {
+    response.innerHTML = content;
+  }
   results.classList.add('active');
 }
 
