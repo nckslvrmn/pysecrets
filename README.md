@@ -5,7 +5,7 @@ A light-weight, ephemeral secret sharing service. pysecrets uses a secure PBKDF 
 
 ## Dependencies
 
-Pysecrets requires python3.9, the [cryptography](https://pypi.org/project/cryptography/) module, and [boto3](https://pypi.org/project/boto3/) (included in the lambda runtime already), to support the mode of encryption used by the service.
+Pysecrets requires python3.9, the [cryptography](https://pypi.org/project/cryptography/) module to support the mode of encryption used by the service, and [boto3](https://pypi.org/project/boto3/) (included in the python lambda runtime by AWS).
 
 Pysecrets uses AWS serverless services including: Lambda, DynamoDB, Api Gateway, and S3. These are used for the application runtime and UI, as well as storage of encrypted secrets.
 
@@ -13,10 +13,23 @@ All the terraform necessary to create the infrastructure required to run a copy 
 
 ## Installation
 
-1. The first step is to run the provided terraform in your AWS account. This directory can be sourced as a terraform module and the variables defined can be passed in. [Here's a link](https://www.terraform.io/docs/language/modules/index.html) for more information on that.
-2. Once the infrastructure has been set up, run `make` to build the Lambda function zip file that will be uploaded to AWS.
-3. From there upload it using this command `aws lambda update-function-code --function-name secrets --zip-file fileb://function.zip`.
-4. Lastly, run `aws s3 cp --region us-east-1 static/ s3://BUCKET_NAME` to upload the UI to the site bucket terraform created.
+### Infrastructure
+
+The first step is to run the provided terraform in your AWS account. This directory can be sourced as a terraform module and the variables defined can be passed in. [Here's a link](https://www.terraform.io/docs/language/modules/index.html) on how to use terraform modules.
+
+### Code
+
+Once the infrastructure has been set up, run `make` to build the Lambda function and layer zip files that will be uploaded to AWS.
+From there upload the zips using these commands:
+```
+aws lambda update-function-code --function-name secrets --zip-file fileb://function.zip
+LAYER_ARN=$(aws lambda publish-layer-version --layer-name secrets_dependencies --zip-file fileb://layer.zip | jq -r '.LayerVersionArn')
+aws lambda update-function-configuration --function-name secrets --layers $LAYER_ARN
+```
+
+### UI
+
+Lastly, run `aws s3 cp --region us-east-1 static/ s3://BUCKET_NAME` to upload the UI to the site bucket terraform created.
 
 ## Configuration
 
