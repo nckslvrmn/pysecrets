@@ -13,9 +13,16 @@ resource "aws_lambda_function" "secrets" {
       TTL_DAYS  = var.ttl_days
     }
   }
+  
+  layers = [
+    aws_lambda_layer_version.secrets_dependencies.arn
+  ]
 
   lifecycle {
-    ignore_changes = [filename]
+    ignore_changes = [
+      filename,
+      layers
+    ]
   }
 }
 
@@ -25,4 +32,16 @@ resource "aws_lambda_permission" "allow_apig" {
   function_name = aws_lambda_function.secrets.function_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_api_gateway_rest_api.secrets.execution_arn}/*/*/*"
+}
+
+resource "aws_lambda_layer_version" "secrets_dependencies" {
+  filename   = "${path.module}/placeholder.zip"
+  layer_name = "secrets_dependencies"
+
+  compatible_runtimes      = ["python3.9"]
+  compatible_architectures = ["x86_64"]
+
+  lifecycle {
+    ignore_changes = all
+  }
 }
