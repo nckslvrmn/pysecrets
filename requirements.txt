@@ -1,1 +1,2 @@
-cryptography==36.0.0
+cryptography==39.0.0
+pyOpenSSL==23.0.0
