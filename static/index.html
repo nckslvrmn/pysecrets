@@ -15,7 +15,7 @@
     <div class="text-center"><i class="fas fa-user-shield fa-5x mx-auto"></i></div>
     <h1 class="text-center display-4 mb-4 font-weight-normal">Ephemeral Secrets</h1>
     <p class="px-3 font-weight-normal">Enter a password, secret message, or private link you wish to send securely.<br /> A secret link only works for the number of times specified, then disappears forever.</p>
-    <form onsubmit="postSecret()" id="form" class="pt-1 px-3 form-signin">
+    <form onsubmit="_postSecret()" id="form" class="pt-1 px-3 form-signin">
       <div class="mb-3 form-group">
         <textarea type="text" name="secret" class="form-control" autocomplete="off" placeholder="content to be encrypted" rows="6"></textarea>
       </div>

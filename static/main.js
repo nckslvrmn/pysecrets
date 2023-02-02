@@ -1,25 +1,25 @@
-function postSecret() {
+function _postSecret() {
   event.preventDefault();
-  var results = document.getElementById("results");
+  const results = document.getElementById("results");
   results.classList.remove('active');
-  var file = document.getElementById("file");
+  const file = document.getElementById("file");
   if (file != null) {
-    var fileSize = file.files[0].size / 1024 / 1024;
+    const fileSize = file.files[0].size / 1024 / 1024;
     if (fileSize > 4) {
       setResp(results, 'alert', 'File exceeds 4mb, cannot upload');
       file.value = '';
       return;
     }
-    var url = new URL(`${window.location.origin}/encrypt`);
-    var params = {
+    const url = new URL(`${window.location.origin}/encrypt`);
+    const params = {
       file_name: file.files[0].name
     };
     url.search = new URLSearchParams(params).toString();
     encrypt(url, file.files[0])
   } else {
-    var form = new FormData(document.getElementById("form"));
-    var secret = form.get("secret");
-    var view_count = form.get("view_count");
+    const form = new FormData(document.getElementById("form"));
+    const secret = form.get("secret");
+    const view_count = form.get("view_count");
     encrypt(`${window.location.origin}/encrypt`, JSON.stringify({
       secret: secret,
       view_count: view_count
@@ -39,21 +39,21 @@ function encrypt(url, body) {
       setResp(results, 'alert', 'There was an error storing secret');
     }
   }).then(function(data) {
-    var secret_link = `${window.location.origin}/secret/${data.secret_id}`;
+    const secret_link = `${window.location.origin}/secret/${data.secret_id}`;
     setResp(results, 'success', `<br /><a href="${secret_link}" target="_blank">${secret_link}</a><br />passphrase: ${data.passphrase}`);
   }).catch((error) => {
     setResp(results, 'alert', 'There was an error storing secret');
   });
 }
 
-function getSecret() {
+function _getSecret() {
   event.preventDefault();
-  var form = new FormData(document.getElementById("form"));
-  var password = form.get("password");
-  var secret_id = window.location.pathname.split('/').slice(-1)[0];
-  var results = document.getElementById("results");
+  const form = new FormData(document.getElementById("form"));
+  const password = form.get("password");
+  const secret_id = window.location.pathname.split('/').slice(-1)[0];
+  const results = document.getElementById("results");
   results.classList.remove('active');
-  var status_code = 0;
+  let status_code = 0;
   fetch(`${window.location.origin}/decrypt`, {
     method: "post",
     body: JSON.stringify({
@@ -79,15 +79,16 @@ function getSecret() {
 }
 
 function setResp(results, level, content, literal = false) {
+  let resp_html = '';
   if (level == 'alert') {
-    var resp_html = `<br /><div id="response" class="alert alert-danger" role="alert"></div>`;
+    resp_html = `<br /><div id="response" class="alert alert-danger" role="alert"></div>`;
   } else if (level == 'warning') {
-    var resp_html = `<br /><div id="response" class="alert alert-warning" role="alert"></div>`;
+    resp_html = `<br /><div id="response" class="alert alert-warning" role="alert"></div>`;
   } else {
-    var resp_html = '<br /><pre id="response" class="mw-50"></pre>';
+    resp_html = '<br /><pre id="response" class="mw-50"></pre>';
   }
   results.innerHTML = resp_html;
-  var response = document.getElementById("response");
+  const response = document.getElementById("response");
   if (literal) {
     response.appendChild(document.createTextNode(content));
   } else {
@@ -107,17 +108,17 @@ function forceFileDownload(response) {
 
 function b64toBlob(b64Data) {
   sliceSize = 512;
-  var byteCharacters = atob(b64Data);
-  var byteArrays = [];
-  for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-    var slice = byteCharacters.slice(offset, offset + sliceSize);
-    var byteNumbers = new Array(slice.length);
-    for (var i = 0; i < slice.length; i++) {
+  const byteCharacters = atob(b64Data);
+  const byteArrays = [];
+  for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+    const slice = byteCharacters.slice(offset, offset + sliceSize);
+    const byteNumbers = new Array(slice.length);
+    for (let i = 0; i < slice.length; i++) {
       byteNumbers[i] = slice.charCodeAt(i);
     }
-    var byteArray = new Uint8Array(byteNumbers);
+    const byteArray = new Uint8Array(byteNumbers);
     byteArrays.push(byteArray);
   }
-  var blob = new Blob(byteArrays);
+  const blob = new Blob(byteArrays);
   return blob;
 }
