@@ -28,6 +28,8 @@ class Secret:
 
     def decrypt(self):
         decrypted = self.crypt.decrypt()
+        if decrypted is None:
+            return None
         ret = decrypted if self.file_name else decrypted.decode('utf-8')
         return ret
 
@@ -39,7 +41,7 @@ class Secret:
             'salt': {'S': tos(b64e(self.crypt.salt))},
             'header': {'S': tos(b64e(self.crypt.header))},
             'ttl': {'N': str(ttl)},
-            'view_count': {'N': str(self.view_count)}
+            'view_count': {'N': str(self.view_count)},
         }
         if self.file_name is not None:
             self.__store_file()
@@ -53,10 +55,7 @@ class Secret:
     @classmethod
     def load(self, secret_id, passphrase):
         sec = Secret()
-        resp = sec.dynamo.get_item(
-            TableName='Secrets',
-            Key={'secret_id': {'S': secret_id}}
-        )
+        resp = sec.dynamo.get_item(TableName='Secrets', Key={'secret_id': {'S': secret_id}})
 
         if resp.get('Item') is None:
             return None
@@ -69,22 +68,21 @@ class Secret:
             data=b64d(resp['Item']['data']['S']),
             nonce=b64d(resp['Item']['nonce']['S']),
             salt=b64d(resp['Item']['salt']['S']),
-            header=b64d(resp['Item']['header']['S'])
+            header=b64d(resp['Item']['header']['S']),
         )
         sec.decrypted = sec.decrypt()
+        if sec.decrypted is None:
+            return None
 
         try:
             file_name = json.loads(sec.decrypted).get('file_name')
-        except (JSONDecodeError, TypeError):
+        except (JSONDecodeError, TypeError, AttributeError):
             return sec
 
         if file_name is not None:
             sec.file_name = file_name
             try:
-                s3_resp = sec.s3.get_object(
-                    Bucket=os.environ.get('S3_BUCKET'),
-                    Key=resp['Item']['secret_id']['S'] + '.enc'
-                )
+                s3_resp = sec.s3.get_object(Bucket=os.environ.get('S3_BUCKET'), Key=resp['Item']['secret_id']['S'] + '.enc')
                 sec.crypt.data = b64d(s3_resp['Body'].read())
             except botocore.exceptions.ClientError:
                 return None
@@ -94,11 +92,7 @@ class Secret:
 
     def __store_file(self):
         self.s3.put_object(
-            Bucket=os.environ.get('S3_BUCKET'),
-            ACL='private',
-            Key=self.crypt.secret_id + '.enc',
-            Body=b64e(self.crypt.data),
-            ServerSideEncryption='aws:kms'
+            Bucket=os.environ.get('S3_BUCKET'), ACL='private', Key=self.crypt.secret_id + '.enc', Body=b64e(self.crypt.data), ServerSideEncryption='aws:kms'
         )
 
     def burn(self):
@@ -107,12 +101,9 @@ class Secret:
             self.dynamo.update_item(
                 TableName='Secrets',
                 Key={'secret_id': {'S': self.secret_id}},
-                AttributeUpdates={'view_count': {'Value': {'N': str(self.view_count)}, 'Action': 'PUT'}}
+                AttributeUpdates={'view_count': {'Value': {'N': str(self.view_count)}, 'Action': 'PUT'}},
             )
         else:
             if self.file_name is not None:
                 self.s3.delete_object(Bucket=os.environ.get('S3_BUCKET'), Key=self.secret_id + '.enc')
-            self.dynamo.delete_item(
-                TableName='Secrets',
-                Key={'secret_id': {'S': self.secret_id}}
-            )
+            self.dynamo.delete_item(TableName='Secrets', Key={'secret_id': {'S': self.secret_id}})
