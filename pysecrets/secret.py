@@ -28,6 +28,8 @@ class Secret:
 
     def decrypt(self):
         decrypted = self.crypt.decrypt()
+        if decrypted is None:
+            return None
         ret = decrypted if self.file_name else decrypted.decode('utf-8')
         return ret
 
@@ -69,6 +71,8 @@ class Secret:
             header=b64d(resp['Item']['header']['S']),
         )
         sec.decrypted = sec.decrypt()
+        if sec.decrypted is None:
+            return None
 
         try:
             file_name = json.loads(sec.decrypted).get('file_name')

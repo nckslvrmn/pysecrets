@@ -2,6 +2,7 @@ import os
 
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from cryptography.exceptions import InvalidTag
 from .helpers import rand_string
 
 
@@ -21,7 +22,10 @@ class SimpleCrypt:
 
     def decrypt(self):
         cipher = self.__init_cipher()
-        return cipher.decrypt(self.nonce, self.data, self.header)
+        try:
+            return cipher.decrypt(self.nonce, self.data, self.header)
+        except InvalidTag:
+            return None
 
     def __init_cipher(self):
         scrypt = Scrypt(self.salt, length=32, n=2**14, r=8, p=1)

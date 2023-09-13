@@ -22,6 +22,7 @@ def decrypt(env):
     print(f"AUDIT: attempting to decrypt {env['body']['secret_id']} from {env['ip']}")
 
     if sec is None:
+        print(f"AUDIT: decrypt failed for {env['body']['secret_id']} from {env['ip']}")
         return {'statusCode': 404, 'body': ''}
 
     sec.burn()
@@ -31,7 +32,7 @@ def decrypt(env):
     else:
         body = {'data': sec.decrypted}
 
-    print(f"AUDIT: success decrypting {sec.secret_id} from {env['ip']}, {sec.view_count} views remaining")
+    print(f"AUDIT: decrypt success {sec.secret_id} from {env['ip']}, {sec.view_count} views remaining")
     return {'statusCode': 200, 'body': json.dumps(body)}
 
 
