@@ -15,7 +15,8 @@ def handler(event, context):
         'method': event['requestContext']['httpMethod'],
         'path': event['requestContext']['path'],
         'params': event['queryStringParameters'] or {},
-        'body': body
+        'body': body,
+        'ip': event.get('headers', {}).get('x-forwarded-for', 'UNKOWN IP'),
     }
 
     resp = router(env)

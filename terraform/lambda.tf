@@ -3,7 +3,7 @@ resource "aws_lambda_function" "secrets" {
   function_name = "secrets"
   role          = aws_iam_role.secrets.arn
   handler       = "lambda.handler"
-  runtime       = "python3.9"
+  runtime       = "python3.11"
   memory_size   = 2048
   timeout       = 5
 
@@ -13,7 +13,7 @@ resource "aws_lambda_function" "secrets" {
       TTL_DAYS  = var.ttl_days
     }
   }
-  
+
   layers = [
     aws_lambda_layer_version.secrets_dependencies.arn
   ]
@@ -38,7 +38,7 @@ resource "aws_lambda_layer_version" "secrets_dependencies" {
   filename   = "${path.module}/placeholder.zip"
   layer_name = "secrets_dependencies"
 
-  compatible_runtimes      = ["python3.9"]
+  compatible_runtimes      = ["python3.11"]
   compatible_architectures = ["x86_64"]
 
   lifecycle {

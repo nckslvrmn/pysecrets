@@ -11,7 +11,7 @@ function:
 
 layer:
 	find . -type d -name "__pycache__" -prune -exec rm -rf {} \;
-	docker run --rm -v `pwd`:/var/task --user `id -u`:`id -g` "public.ecr.aws/sam/build-python3.9:latest" /bin/sh -c "pip install --no-cache -r requirements.txt -t python; exit"
+	docker run --rm -v `pwd`:/var/task --user `id -u`:`id -g` "public.ecr.aws/sam/build-python3.11:latest" /bin/sh -c "pip install --no-cache -r requirements.txt -t python; exit"
 	zip -r9 ./layer.zip python/
 
 clean:
