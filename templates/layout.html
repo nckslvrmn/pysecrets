@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  {% block head %}
+  <meta charset="utf-8">
+  <title>Secrets</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css"
+    integrity="sha512-b2QcS5SsA8tZodcDtGRELiGv5SaKSk1vDHDaQRda0htPYWZ6046lr3kJ5bAAQdpV2mmA/4v0wQF9MyU6/pDIAg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+    integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="/static/site.css" />
+  {% endblock %}
+</head>
+
+<body class="text-left py-3">
+  <div class="form form-signin w-100 my-0 mx-auto">
+    <div class="text-center"><i class="fas fa-user-shield fa-5x mx-auto"></i></div>
+    <h1 class="text-center display-4 mb-4 font-weight-normal">Ephemeral Secrets</h1>
+    {% block content %}{% endblock %}
+    <div id="results" class="mw-100 p-3">
+      <br />
+      <div id="response"></div>
+    </div>
+  </div>
+  <script src="/static/main.js"></script>
+</body>
+
+</html>

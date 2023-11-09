@@ -7,10 +7,10 @@ from .helpers import rand_string
 
 
 class SimpleCrypt:
-    def __init__(self, secret_id=None, data=None, password=None, nonce=None, salt=None, header=None):
+    def __init__(self, secret_id=None, data=None, passphrase=None, nonce=None, salt=None, header=None):
         self.secret_id = secret_id or rand_string(16)
         self.data = data or None
-        self.password = password or rand_string(32, url_safe=False)
+        self.passphrase = passphrase or rand_string(32, url_safe=False)
         self.nonce = nonce or os.urandom(96)
         self.salt = salt or os.urandom(16)
         self.header = header or os.urandom(16)
@@ -29,6 +29,6 @@ class SimpleCrypt:
 
     def __init_cipher(self):
         scrypt = Scrypt(self.salt, length=32, n=2**14, r=8, p=1)
-        key = scrypt.derive(bytes(self.password, encoding='utf8'))
+        key = scrypt.derive(bytes(self.passphrase, encoding='utf8'))
         cipher = AESGCM(key)
         return cipher

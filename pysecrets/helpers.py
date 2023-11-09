@@ -1,6 +1,16 @@
 import base64
+import logging
+import os
 import secrets
 import string
+
+from datetime import datetime, timezone
+
+from flask import current_app
+
+
+def load_env():
+    current_app.env = {'s3_bucket': os.environ.get('S3_BUCKET'), 'ttl_days': int(os.environ.get('TTL_DAYS', 5))}
 
 
 def rand_string(c, url_safe=True):
@@ -32,3 +42,10 @@ def sanitize_view_count(view_count):
         return 10
     else:
         return vc
+
+
+def log_line(message):
+    log = logging.getLogger('gunicorn.access')
+    now = datetime.now(timezone.utc)
+    formatted = now.strftime("%d/%b/%Y:%H:%M:%S %z")
+    log.info(f'[{formatted}] {message}')

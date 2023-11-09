@@ -1,124 +1,134 @@
-function _postSecret() {
+function postSecretFile(event) {
   event.preventDefault();
-  const results = document.getElementById("results");
-  results.classList.remove('active');
-  const file = document.getElementById("file");
-  if (file != null) {
-    const fileSize = file.files[0].size / 1024 / 1024;
-    if (fileSize > 4) {
-      setResp(results, 'alert', 'File exceeds 4mb, cannot upload');
-      file.value = '';
-      return;
-    }
-    const url = new URL(`${window.location.origin}/encrypt`);
-    const params = {
-      file_name: file.files[0].name
-    };
-    url.search = new URLSearchParams(params).toString();
-    encrypt(url, file.files[0])
-  } else {
-    const form = new FormData(document.getElementById("form"));
-    const secret = form.get("secret");
-    const view_count = form.get("view_count");
-    encrypt(`${window.location.origin}/encrypt`, JSON.stringify({
-      secret: secret,
-      view_count: view_count
-    }))
+  document.getElementById('results').classList.remove('active');
+  
+  const file = document.getElementById('file').files[0];
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  if ((file.size / 1024 / 1024) > 5) {
+    setResp('processing', 'Processing upload');
   }
+
+  _encrypt(formData, {});
+}
+  
+  
+function postSecret(event) {
+  event.preventDefault();
+  document.getElementById('results').classList.remove('active');
+  
+  const formData = new FormData(document.getElementById("form")).entries();
+  
+  _encrypt(JSON.stringify(Object.fromEntries(formData)), {'Content-Type': 'application/json'});
 }
 
-function encrypt(url, body) {
-  results.classList.remove('active');
-  fetch(url, {
+function _encrypt(data, headers) {
+  fetch('/encrypt', {
     method: 'post',
-    body: body
-  }).then(function(resp) {
-    if (resp.ok) {
-      return resp.json();
-    } else {
-      setResp(results, 'alert', 'There was an error storing secret');
+    headers: headers,
+    body: data
+  })
+  .then(
+    function(resp) {
+      if (resp.ok) {
+        return resp.json();
+      } else {
+        setResp('alert', 'There was an error storing secret');
+      }
     }
-  }).then(function(data) {
-    const secret_link = `${window.location.origin}/secret/${data.secret_id}`;
-    setResp(results, 'success', `<br /><a href="${secret_link}" target="_blank">${secret_link}</a><br />passphrase: ${data.passphrase}`);
-  }).catch((error) => {
-    setResp(results, 'alert', 'There was an error storing secret');
+  )
+  .then(
+    function(data) {
+      const secret_link = `${window.location.origin}/secret/${data.secret_id}`;
+      setResp('success', `<br /><a href="${secret_link}" target="_blank">${secret_link}</a><br />passphrase: ${data.passphrase}`);
+    }
+  )
+  .catch(() => {
+    setResp('alert', 'There was an error storing secret');
   });
 }
 
-function _getSecret() {
+function getSecret(event) {
   event.preventDefault();
-  const form = new FormData(document.getElementById("form"));
-  const password = form.get("password");
-  const secret_id = window.location.pathname.split('/').slice(-1)[0];
-  const results = document.getElementById("results");
+  document.getElementById('results').classList.remove('active');
+
+  const formData = new FormData(document.getElementById("form"));
+  formData.append('secret_id', window.location.pathname.split('/').slice(-1)[0]);
+  
+  fetch('/decrypt', {
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(Object.fromEntries(formData.entries()))
+  })
+  .then(
+    function(resp) {
+      if (!(resp.ok)) {
+        if (resp.status === 404) {
+          setResp('warning', 'Secret has either already been viewed<br />or your passphrase is incorrect.');
+        } else {
+          setResp('alert', 'There was an error retrieving secret');
+        }
+      } else {
+        if (resp.headers.has('Content-Disposition')) {
+          return resp.blob().then(
+            function(blob) {
+              dlBlob(resp.headers.get('Content-Disposition'), blob);
+          });
+        } else {
+          return resp.json().then(
+            function(json) {
+              setResp('success', json.data);
+          });
+        }
+      }
+    }
+  );
+}
+
+function dlBlob(cdheader, blob) {
+  const parts = cdheader.split(';');
+  filename = parts[1].split('=')[1];
+  var url = window.URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+function setResp(level, content) {
+  const results = document.getElementById('results');
   results.classList.remove('active');
-  let status_code = 0;
-  fetch(`${window.location.origin}/decrypt`, {
-    method: "post",
-    body: JSON.stringify({
-      passphrase: password,
-      secret_id: secret_id
-    })
-  }).then(resp => {
-    status_code = resp.status;
-    return resp.json();
-  }).then(function(data) {
-    if (data.file_name != null) {
-      forceFileDownload(data);
-    } else {
-      setResp(results, 'success', data.data, true);
-    }
-  }).catch((error) => {
-    if (status_code === 404) {
-      setResp(results, 'warning', 'Secret has either already been viewed<br />or your passphrase is incorrect.');
-    } else {
-      setResp(results, 'alert', 'There was an error retrieving secret');
-    }
-  });
-}
+  
+  const response = document.getElementById('response');
+  switch(level) {
+    case 'alert':
+      response.classList.add('alert', 'alert-danger');
+      response.setAttribute('role', 'alert');
+      response.innerHTML = content;
+      break;
+    case 'warning':
+      response.classList.add('alert', 'alert-warning');
+      response.setAttribute('role', 'alert');
+      response.innerHTML = content;
+      break;
+    case 'processing':
+      response.classList.add('alert', 'alert-primary');
+      response.setAttribute('role', 'alert');
+      response.innerHTML = content;
+      break;
+    default:
+      response.classList.remove('alert', 'alert-danger', 'alert-warning', 'alert-primary');
+      response.removeAttribute('role');
+      let pre_content = `<pre id="response_body" class="mw-50">${content}</pre>`;
+      response.innerHTML = pre_content;
+      break;
+  }
+  
 
-function setResp(results, level, content, literal = false) {
-  let resp_html = '';
-  if (level == 'alert') {
-    resp_html = `<br /><div id="response" class="alert alert-danger" role="alert"></div>`;
-  } else if (level == 'warning') {
-    resp_html = `<br /><div id="response" class="alert alert-warning" role="alert"></div>`;
-  } else {
-    resp_html = '<br /><pre id="response" class="mw-50"></pre>';
-  }
-  results.innerHTML = resp_html;
-  const response = document.getElementById("response");
-  if (literal) {
-    response.appendChild(document.createTextNode(content));
-  } else {
-    response.innerHTML = content;
-  }
   results.classList.add('active');
-}
-
-function forceFileDownload(response) {
-  const url = window.URL.createObjectURL(b64toBlob(response.data));
-  const link = document.createElement('a');
-  link.href = url;
-  link.setAttribute('download', response.file_name);
-  document.body.appendChild(link);
-  link.click();
-}
-
-function b64toBlob(b64Data) {
-  sliceSize = 512;
-  const byteCharacters = atob(b64Data);
-  const byteArrays = [];
-  for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-    const slice = byteCharacters.slice(offset, offset + sliceSize);
-    const byteNumbers = new Array(slice.length);
-    for (let i = 0; i < slice.length; i++) {
-      byteNumbers[i] = slice.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    byteArrays.push(byteArray);
-  }
-  const blob = new Blob(byteArrays);
-  return blob;
 }
