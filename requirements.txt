@@ -1,5 +1,5 @@
 boto3==1.28.76
-cryptography==41.0.5
+cryptography==41.0.6
 flask==3.0.0
 gunicorn==21.2.0
 pyOpenSSL==23.3.0
