@@ -1,5 +1,5 @@
-boto3==1.28.76
-cryptography==42.0.0
-flask==3.0.0
+boto3==1.34.36
+cryptography==42.0.2
+flask==3.0.2
 gunicorn==21.2.0
-pyOpenSSL==23.3.0
+pyOpenSSL==24.0.0
