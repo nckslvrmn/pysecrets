@@ -7,7 +7,7 @@ function postSecretFile(event) {
   formData.append('file', file);
   
   if ((file.size / 1024 / 1024) > 5) {
-    setResp('processing', 'Processing upload');
+    setResp('processing', 'Processing upload', true);
   }
 
   _encrypt(formData, {});
@@ -34,18 +34,18 @@ function _encrypt(data, headers) {
       if (resp.ok) {
         return resp.json();
       } else {
-        setResp('alert', 'There was an error storing secret');
+        setResp('alert', 'There was an error storing secret', true);
       }
     }
   )
   .then(
     function(data) {
       const secret_link = `${window.location.origin}/secret/${data.secret_id}`;
-      setResp('success', `<br /><a href="${secret_link}" target="_blank">${secret_link}</a><br />passphrase: ${data.passphrase}`);
+      setResp('success', `<br /><a href="${secret_link}" target="_blank">${secret_link}</a><br />passphrase: ${data.passphrase}`, false);
     }
   )
   .catch(() => {
-    setResp('alert', 'There was an error storing secret');
+    setResp('alert', 'There was an error storing secret', true);
   });
 }
 
@@ -67,9 +67,9 @@ function getSecret(event) {
     function(resp) {
       if (!(resp.ok)) {
         if (resp.status === 404) {
-          setResp('warning', 'Secret has either already been viewed<br />or your passphrase is incorrect.');
+          setResp('warning', 'Secret has either already been viewed<br />or your passphrase is incorrect.', true);
         } else {
-          setResp('alert', 'There was an error retrieving secret');
+          setResp('alert', 'There was an error retrieving secret', true);
         }
       } else {
         if (resp.headers.has('Content-Disposition')) {
@@ -100,36 +100,33 @@ function dlBlob(cdheader, blob) {
   a.remove();
 }
 
-function setResp(level, content, text_resp=false) {
+function setResp(level, content, text_resp) {
   const results = document.getElementById('results');
   results.classList.remove('active');
   
   const response = document.getElementById('response');
+  response.classList.remove('alert', 'alert-danger', 'alert-warning', 'alert-primary');
+  response.removeAttribute('role');
+  
   switch(level) {
     case 'alert':
       response.classList.add('alert', 'alert-danger');
       response.setAttribute('role', 'alert');
-      response.innerHTML = content;
       break;
     case 'warning':
       response.classList.add('alert', 'alert-warning');
       response.setAttribute('role', 'alert');
-      response.innerHTML = content;
       break;
     case 'processing':
       response.classList.add('alert', 'alert-primary');
       response.setAttribute('role', 'alert');
-      response.innerHTML = content;
       break;
-    default:
-      response.classList.remove('alert', 'alert-danger', 'alert-warning', 'alert-primary');
-      response.removeAttribute('role');
-      if (text_resp) {
-        document.getElementById('response_body').innerText = content;
-      } else {
-        document.getElementById('response_body').innerHTML = content;
-      }
-      break;
+  }
+
+  if (text_resp) {
+    document.getElementById('response_body').innerText = content;
+  } else {
+    document.getElementById('response_body').innerHTML = content;
   }
   
 
