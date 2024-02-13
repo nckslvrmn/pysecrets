@@ -80,7 +80,7 @@ function getSecret(event) {
         } else {
           return resp.json().then(
             function(json) {
-              setResp('success', json.data);
+              setResp('success', json.data, true);
           });
         }
       }
@@ -100,7 +100,7 @@ function dlBlob(cdheader, blob) {
   a.remove();
 }
 
-function setResp(level, content) {
+function setResp(level, content, text_resp=false) {
   const results = document.getElementById('results');
   results.classList.remove('active');
   
@@ -124,9 +124,11 @@ function setResp(level, content) {
     default:
       response.classList.remove('alert', 'alert-danger', 'alert-warning', 'alert-primary');
       response.removeAttribute('role');
-      let pre_content = `<pre id="response_body" class="mw-50 fs-5"></pre>`;
-      response.innerHTML = pre_content;
-      document.getElementById('response_body').innerText = content;
+      if (text_resp) {
+        document.getElementById('response_body').innerText = content;
+      } else {
+        document.getElementById('response_body').innerHTML = content;
+      }
       break;
   }
   
