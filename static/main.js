@@ -124,8 +124,9 @@ function setResp(level, content) {
     default:
       response.classList.remove('alert', 'alert-danger', 'alert-warning', 'alert-primary');
       response.removeAttribute('role');
-      let pre_content = `<pre id="response_body" class="mw-50 fs-5">${content}</pre>`;
+      let pre_content = `<pre id="response_body" class="mw-50 fs-5"></pre>`;
       response.innerHTML = pre_content;
+      document.getElementById('response_body').innerText = content;
       break;
   }
   
