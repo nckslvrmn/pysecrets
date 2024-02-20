@@ -67,7 +67,7 @@ function getSecret(event) {
     function(resp) {
       if (!(resp.ok)) {
         if (resp.status === 404) {
-          setResp('warning', 'Secret has either already been viewed<br />or your passphrase is incorrect.', true);
+          setResp('warning', 'Secret has either already been viewed<br />or your passphrase is incorrect.', false);
         } else {
           setResp('alert', 'There was an error retrieving secret', true);
         }
