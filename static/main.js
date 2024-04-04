@@ -108,20 +108,21 @@ function setResp(level, content, text_resp) {
   response.classList.remove('alert', 'alert-danger', 'alert-warning', 'alert-primary');
   response.removeAttribute('role');
   
+  var alert_level = 'success';
   switch(level) {
     case 'alert':
-      response.classList.add('alert', 'alert-danger');
-      response.setAttribute('role', 'alert');
+      alert_level = 'danger';
       break;
     case 'warning':
-      response.classList.add('alert', 'alert-warning');
-      response.setAttribute('role', 'alert');
+      alert_level = 'warning';
       break;
     case 'processing':
-      response.classList.add('alert', 'alert-primary');
-      response.setAttribute('role', 'alert');
+      alert_level = 'alert-primary';
       break;
   }
+
+  response.classList.add('alert', `alert-${alert_level}`);
+  response.setAttribute('role', 'alert');
 
   if (text_resp) {
     document.getElementById('response_body').innerText = content;
