@@ -10,14 +10,17 @@ from flask import current_app
 
 
 def load_env():
-    current_app.env = {'s3_bucket': os.environ.get('S3_BUCKET'), 'ttl_days': int(os.environ.get('TTL_DAYS', 5))}
+    current_app.env = {
+        "s3_bucket": os.environ.get("S3_BUCKET"),
+        "ttl_days": int(os.environ.get("TTL_DAYS", 5)),
+    }
 
 
 def rand_string(c, url_safe=True):
     accepted_chars = string.ascii_letters + string.digits
     if not url_safe:
-        accepted_chars += '!#$%&*+-=?@_~'
-    return ''.join(secrets.choice(accepted_chars) for _ in range(c))
+        accepted_chars += "!#$%&*+-=?@_~"
+    return "".join(secrets.choice(accepted_chars) for _ in range(c))
 
 
 def b64e(b, url_safe=False):
@@ -31,7 +34,7 @@ def b64d(s, url_safe=False):
 
 
 def tos(b):
-    return b.decode('utf-8')
+    return b.decode("utf-8")
 
 
 def sanitize_view_count(view_count):
@@ -45,7 +48,7 @@ def sanitize_view_count(view_count):
 
 
 def log_line(message):
-    log = logging.getLogger('gunicorn.access')
+    log = logging.getLogger("gunicorn.access")
     now = datetime.now(timezone.utc)
     formatted = now.strftime("%d/%b/%Y:%H:%M:%S %z")
-    log.info(f'[{formatted}] {message}')
+    log.info(f"[{formatted}] {message}")

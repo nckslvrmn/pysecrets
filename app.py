@@ -8,27 +8,27 @@ with app.app_context():
     load_env()
 
 
-@app.route('/', methods=['GET'])
+@app.route("/", methods=["GET"])
 def index():
-    return render_template('index.html')
+    return render_template("index.html")
 
 
-@app.route('/files', methods=['GET'])
+@app.route("/files", methods=["GET"])
 def files():
-    return render_template('files.html')
+    return render_template("files.html")
 
 
-@app.route('/secret/<secret_id>', methods=['GET'])
+@app.route("/secret/<secret_id>", methods=["GET"])
 def secret(secret_id):
-    return render_template('secret.html')
+    return render_template("secret.html")
 
 
-@app.route('/encrypt', methods=['POST'])
+@app.route("/encrypt", methods=["POST"])
 def enc():
     return encrypt()
 
 
-@app.route('/decrypt', methods=['POST'])
+@app.route("/decrypt", methods=["POST"])
 def dec():
     return decrypt()
 
