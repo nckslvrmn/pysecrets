@@ -1,4 +1,8 @@
-# pysecrets
+# ⛔️ DEPRECATED: please migrate to [go_ots](https://github.com/nckslvrmn/go_ots)
+
+[![No Maintenance Intended](http://unmaintained.tech/badge.svg)](http://unmaintained.tech/)
+
+## pysecrets
 
 A light-weight, ephemeral secret sharing service. pysecrets uses a secure PBKDF
 (scrypt), and the latest AES encryption standards to ensure the confidentiality,
